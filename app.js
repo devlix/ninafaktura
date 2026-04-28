@@ -70,6 +70,9 @@ document.getElementById("add").onclick = async () => {
 };
 
 // 5. funksjoner (loadInvoices etc.)
+
+let selectedInvoice = null; // holder valgt invoice
+
 async function loadInvoices() {
   if (!currentUser) return;
 
@@ -80,8 +83,46 @@ async function loadInvoices() {
 
   const snapshot = await getDocs(q);
 
-  let data = [];
-  snapshot.forEach((doc) => data.push(doc.data()));
+  // hent data fra firebase og send til rendering for PDF
+  snapshot.forEach((doc) => {
+    selectedInvoice = doc.data(); // ta første for test
+  });
 
-  document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+  renderInvoice(selectedInvoice); // fyll HTML før PDF
 }
+
+function renderInvoice(invoice) {
+  const el = document.getElementById("invoice-content");
+
+  el.innerHTML = `
+    <p><strong>Faktura nr:</strong> ${invoice.id}</p>
+    <p><strong>Kunde:</strong> ${invoice.customer?.name || ""}</p>
+
+    <h3>Linjer</h3>
+    <ul>
+      ${invoice.items
+        ?.map(
+          (item) => `
+        <li>
+          ${item.description} – ${item.quantity} x ${item.unitPrice} kr
+        </li>
+      `
+        )
+        .join("")}
+    </ul>
+
+    <h3>Total: ${invoice.total} kr</h3>
+  `;
+}
+
+// GENERER PDF
+document.getElementById("downloadPdf").onclick = () => {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  // henter tekst fra HTML (må være fylt først!)
+  const content = document.getElementById("invoice").innerText;
+
+  doc.text(content, 10, 10); // legger tekst i PDF
+  doc.save("invoice.pdf"); // laster ned
+};
