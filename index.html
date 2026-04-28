@@ -11,8 +11,16 @@
     <button id="add">Add invoice</button>
 
     <!-- Template for Faktura -->
-    <div id="invoice" style="padding: 20px; max-width: 600px">
-      <h2>Faktura</h2>
+    <div
+      id="invoice"
+      style="
+        width: 800px;
+        padding: 30px;
+        font-family: sans-serif;
+        background: white;
+      "
+    >
+      <h1>FAKTURA</h1>
       <div id="invoice-content"></div>
     </div>
 
@@ -23,6 +31,7 @@
     <pre id="output"></pre>
 
     <!-- TODO Dette må sikres med hashene til de eksplisitte libarries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script type="module" src="app.js"></script>
   </body>

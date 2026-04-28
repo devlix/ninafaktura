@@ -95,34 +95,49 @@ function renderInvoice(invoice) {
   const el = document.getElementById("invoice-content");
 
   el.innerHTML = `
-    <p><strong>Faktura nr:</strong> ${invoice.id}</p>
+    <!-- Kundeinfo -->
     <p><strong>Kunde:</strong> ${invoice.customer?.name || ""}</p>
 
-    <h3>Linjer</h3>
-    <ul>
-      ${invoice.items
-        ?.map(
-          (item) => `
-        <li>
-          ${item.description} – ${item.quantity} x ${item.unitPrice} kr
-        </li>
-      `
-        )
-        .join("")}
-    </ul>
+    <!-- Tabell -->
+    <table style="width:100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:left; border-bottom:1px solid #ccc;">Beskrivelse</th>
+          <th>Antall</th>
+          <th>Pris</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${invoice.items
+          ?.map(
+            (item) => `
+          <tr>
+            <td>${item.description}</td>
+            <td>${item.quantity}</td>
+            <td>${item.unitPrice} kr</td>
+          </tr>
+        `
+          )
+          .join("")}
+      </tbody>
+    </table>
 
-    <h3>Total: ${invoice.total} kr</h3>
+    <!-- Total -->
+    <h2 style="text-align:right;">Total: ${invoice.total} kr</h2>
   `;
 }
 
 // GENERER PDF
-document.getElementById("downloadPdf").onclick = () => {
+document.getElementById("downloadPdf").onclick = async () => {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  const invoiceElement = document.getElementById("invoice");
 
-  // henter tekst fra HTML (må være fylt først!)
-  const content = document.getElementById("invoice").innerText;
+  // gjør HTML om til canvas (bilde)
+  const canvas = await html2canvas(invoiceElement);
+  const imgData = canvas.toDataURL("image/png");
+  const doc = new jsPDF("p", "mm", "a4");
 
-  doc.text(content, 10, 10); // legger tekst i PDF
-  doc.save("invoice.pdf"); // laster ned
+  // legg bilde inn i PDF (skalert til A4)
+  doc.addImage(imgData, "PNG", 10, 10, 190, 0);
+  doc.save("invoice.pdf");
 };
