@@ -1,4 +1,4 @@
-// 1. imports
+// 1. ========= imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
   getFirestore,
@@ -13,7 +13,7 @@ import {
   deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 2. config + init
+// 2. ========= config + init
 import {
   getAuth,
   signInWithPopup,
@@ -35,7 +35,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// 3. auth state / setup
+// 3. ========= auth state / setup
 let currentUser = null;
 
 document.getElementById("login").onclick = async () => {
@@ -51,7 +51,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// 4. UI handlers (knapper) - ("add invoice" etc)
+// 4. ========= UI handlers (knapper) - ("add invoice" etc)
 document.getElementById("add").onclick = async () => {
   if (!currentUser) {
     alert("Login først");
@@ -59,17 +59,36 @@ document.getElementById("add").onclick = async () => {
   }
 
   await addDoc(collection(db, "invoices"), {
-    id: "INV-001",
+    id: "INV-002",
     ownerId: currentUser.uid,
-    total: 1000,
     status: "draft",
+
     createdAt: new Date(),
+
+    customer: {
+      name: "Kunde AS",
+      email: "kunde@mail.no",
+      address: "Oslo",
+    },
+
+    items: [
+      {
+        description: "Konsulentarbeid",
+        quantity: 10,
+        unitPrice: 1000,
+        vatRate: 0.25,
+      },
+    ],
+
+    subtotal: 10000,
+    vatTotal: 2500,
+    total: 12500,
   });
 
   loadInvoices();
 };
 
-// 5. funksjoner (loadInvoices etc.)
+// 5. ========= funksjoner (loadInvoices etc.)
 
 let selectedInvoice = null; // holder valgt invoice
 
@@ -83,61 +102,92 @@ async function loadInvoices() {
 
   const snapshot = await getDocs(q);
 
+  // reset først
+  selectedInvoice = null;
+
   // hent data fra firebase og send til rendering for PDF
   snapshot.forEach((doc) => {
     selectedInvoice = doc.data(); // ta første for test
   });
 
-  renderInvoice(selectedInvoice); // fyll HTML før PDF
+  // kall KUN hvis vi faktisk har data
+  if (selectedInvoice) {
+    renderInvoice(selectedInvoice);
+  } else {
+    console.warn("No invoices found");
+    alert("!! No invoice found !!");
+  }
 }
 
 function renderInvoice(invoice) {
-  const el = document.getElementById("invoice-content");
+  // stopp hvis ingen invoice
+  if (!invoice) {
+    console.warn("No invoice to render");
+    alert("!! No invoice found !!");
+    return;
+  }
+  // sett faktura info
+  document.getElementById("inv-number").innerText = "Nr: " + invoice.id;
 
-  el.innerHTML = `
-    <!-- Kundeinfo -->
-    <p><strong>Kunde:</strong> ${invoice.customer?.name || ""}</p>
+  document.getElementById("inv-date").innerText =
+    "Dato: " + new Date(invoice.createdAt).toLocaleDateString();
 
-    <!-- Tabell -->
-    <table style="width:100%; border-collapse: collapse;">
-      <thead>
-        <tr>
-          <th style="text-align:left; border-bottom:1px solid #ccc;">Beskrivelse</th>
-          <th>Antall</th>
-          <th>Pris</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${invoice.items
-          ?.map(
-            (item) => `
-          <tr>
-            <td>${item.description}</td>
-            <td>${item.quantity}</td>
-            <td>${item.unitPrice} kr</td>
-          </tr>
-        `
-          )
-          .join("")}
-      </tbody>
-    </table>
-
-    <!-- Total -->
-    <h2 style="text-align:right;">Total: ${invoice.total} kr</h2>
+  // kundeinfo
+  document.getElementById("customer").innerHTML = `
+    ${invoice.customer?.name || ""}<br>
+    ${invoice.customer?.address || ""}<br>
+    ${invoice.customer?.email || ""}
   `;
+
+  // items
+  const itemsEl = document.getElementById("items");
+
+  // fallback hvis items mangler
+  const items = invoice.items || [];
+
+  itemsEl.innerHTML = items
+    .map((item) => {
+      const sum = item.quantity * item.unitPrice;
+      const vat = sum * item.vatRate;
+
+      return `
+      
+      <tr style="border-bottom:1px solid #ccc;">
+
+      <td>${item.description}</td>
+      <td>${item.quantity}</td>
+      <td>${item.unitPrice}</td>
+      <td>${vat.toFixed(0)}</td>
+      <td>${sum}</td>
+    </tr>
+  `;
+    })
+    .join("");
+
+  // FIXME - debug: se hele objektet
+  console.log("invoice:", invoice);
+
+  // totals
+  document.getElementById("subtotal").innerText = invoice.subtotal;
+  document.getElementById("vat").innerText = invoice.vatTotal;
+  document.getElementById("total").innerText = invoice.total;
 }
 
 // GENERER PDF
 document.getElementById("downloadPdf").onclick = async () => {
   const { jsPDF } = window.jspdf;
-  const invoiceElement = document.getElementById("invoice");
+  const el = document.getElementById("invoice");
 
-  // gjør HTML om til canvas (bilde)
-  const canvas = await html2canvas(invoiceElement);
+  // høyere scale = skarpere PDF
+  const canvas = await html2canvas(el, { scale: 2 });
   const imgData = canvas.toDataURL("image/png");
   const doc = new jsPDF("p", "mm", "a4");
 
-  // legg bilde inn i PDF (skalert til A4)
-  doc.addImage(imgData, "PNG", 10, 10, 190, 0);
-  doc.save("invoice.pdf");
+  const imgWidth = 210; // A4 bredde
+  const pageHeight = 297;
+
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  doc.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+  doc.save(`invoice-${Date.now()}.pdf`);
 };
