@@ -165,7 +165,7 @@ function renderInvoice(invoice) {
     .join("");
 
   // FIXME - debug: se hele objektet
-  console.log("invoice:", invoice);
+  // console.log("invoice:", invoice);
 
   // totals
   document.getElementById("subtotal").innerText = invoice.subtotal;
@@ -173,21 +173,43 @@ function renderInvoice(invoice) {
   document.getElementById("total").innerText = invoice.total;
 }
 
-// GENERER PDF
-document.getElementById("downloadPdf").onclick = async () => {
+// Ggenerer PDF og åpne mail for user
+//    !! NOTE:
+//    !! Browser kan ikke legge ved filer automatisk i email
+//    !! Bruker må selv legge ved PDF manuelt
+document.getElementById("sendEmail").onclick = async () => {
   const { jsPDF } = window.jspdf;
+
   const el = document.getElementById("invoice");
 
-  // høyere scale = skarpere PDF
+  // 1. generer PDF fra HTML
   const canvas = await html2canvas(el, { scale: 2 });
   const imgData = canvas.toDataURL("image/png");
+
   const doc = new jsPDF("p", "mm", "a4");
 
-  const imgWidth = 210; // A4 bredde
-  const pageHeight = 297;
-
+  const imgWidth = 210;
   const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
   doc.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-  doc.save(`invoice-${Date.now()}.pdf`);
+
+  // 2. last ned PDF (bruker må legge ved selv)
+  const fileName = `invoice-${selectedInvoice.id}.pdf`;
+  doc.save(fileName);
+
+  // 3. lag mail
+  const email = selectedInvoice.customer?.email || "";
+
+  const subject = encodeURIComponent("Faktura " + selectedInvoice.id);
+
+  const body = encodeURIComponent(
+    `Hei,
+
+Se vedlagt faktura (${fileName}).
+
+Mvh`
+  );
+
+  // 4. åpne e-postklient
+  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 };
