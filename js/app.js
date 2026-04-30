@@ -119,6 +119,92 @@ async function loadInvoices() {
   }
 }
 
+// lagre til firebase/firestore
+async function saveInvoice(data) {
+  const docRef = await addDoc(collection(db, "invoices"), data);
+  return docRef.id;
+}
+
+document
+  .getElementById("invoice-form")
+  .addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const user = auth.currentUser;
+    if (!user) return alert("Ikke logget inn");
+
+    try {
+      const data = getFormData(user);
+
+      // TODO: ha mere robust validering!?
+      // minimum validering
+      if (!data.customer.name) {
+        alert("Kundenavn mangler");
+        return;
+      }
+
+      const id = await saveInvoice(data);
+
+      console.log("Lagret med ID:", id);
+
+      // refresh UI
+      updatePreview(data);
+      alert("Faktura lagret!");
+    } catch (err) {
+      console.error(err);
+      alert("Noe gikk galt");
+    }
+    showView("view-list");
+    // TODO: sjekk disse ??
+    // invoices.unshift({ id, ...data });
+    // renderInvoices(invoices);
+  });
+
+function getFormData(user) {
+  const items = [];
+
+  document.querySelectorAll(".item-row").forEach((row) => {
+    const quantity = Number(row.querySelector(".qty").value);
+    const unitPrice = Number(row.querySelector(".price").value);
+    const vatRate = Number(row.querySelector(".vat").value);
+
+    items.push({
+      description: row.querySelector(".desc").value,
+      quantity,
+      unitPrice,
+      vatRate,
+    });
+  });
+
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.quantity * item.unitPrice,
+    0
+  );
+
+  const vatTotal = items.reduce(
+    (sum, item) => sum + (item.quantity * item.unitPrice * item.vatRate) / 100,
+    0
+  );
+
+  const total = subtotal + vatTotal;
+
+  return {
+    ownerId: user.uid,
+    status: "draft",
+    createdAt: new Date(),
+
+    customer: {
+      name: document.getElementById("customer-name").value,
+      email: document.getElementById("customer-email").value,
+    },
+
+    items,
+    subtotal,
+    vatTotal,
+    total,
+  };
+}
+
 function renderInvoice(invoice) {
   // stopp hvis ingen invoice
   if (!invoice) {
@@ -173,6 +259,7 @@ function renderInvoice(invoice) {
   document.getElementById("total").innerText = invoice.total;
 }
 
+// enkel view switching
 function showView(view) {
   document.getElementById("view-list").style.display = "none";
   document.getElementById("view-form").style.display = "none";
@@ -180,7 +267,7 @@ function showView(view) {
   document.getElementById(view).style.display = "block";
 }
 
-// Toggle seksjoner
+// knapper for form buttons
 document.getElementById("show-form").addEventListener("click", () => {
   showView("view-form");
 });
@@ -189,7 +276,70 @@ document.getElementById("back").addEventListener("click", () => {
   showView("view-list");
 });
 
-// Ggenerer PDF og åpne mail for user
+document.getElementById("add-item").addEventListener("click", addItemRow);
+
+// når form / skjema åpnes, legg til en rad
+function addItemRow() {
+  const container = document.getElementById("items");
+
+  const div = document.createElement("div");
+  div.className = "item-row";
+
+  div.innerHTML = `
+    <input class="desc" placeholder="Beskrivelse" />
+    <input class="qty" type="number" value="1" />
+    <input class="price" type="number" placeholder="Pris" />
+    <input class="vat" type="number" value="25" />
+    <button type="button" class="remove">X</button>
+  `;
+
+  container.appendChild(div);
+}
+
+// Remove button for rad salgselement
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("remove")) {
+    const rows = document.querySelectorAll(".item-row");
+
+    // ikke slett siste red
+    if (rows.length > 1) {
+      e.target.parentElement.remove();
+    } else {
+      alert("Du må ha minst én linje");
+    }
+  }
+});
+
+// når bruker klikker "add invoice" - legg til en linje
+document.getElementById("show-form").addEventListener("click", () => {
+  document.getElementById("items").innerHTML = "";
+  addItemRow(); // alltid én linje klar
+  showView("view-form");
+});
+
+// når invoice lagres - opdater Preview automatisk
+function updatePreview(data) {
+  const el = document.getElementById("invoice-template");
+
+  el.innerHTML = `
+    <h3>${data.customer.name}</h3>
+    <p>${data.customer.email}</p>
+
+    <ul>
+      ${data.items
+        .map(
+          (i) => `
+        <li>${i.description} - ${i.quantity} x ${i.unitPrice}</li>
+      `
+        )
+        .join("")}
+    </ul>
+
+    <strong>Total: ${data.total}</strong>
+  `;
+}
+
+// ========= Ggenerer PDF og åpne mail for user
 //    !! NOTE:
 //    !! Browser kan ikke legge ved filer automatisk i email
 //    !! Bruker må selv legge ved PDF manuelt
