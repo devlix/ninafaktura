@@ -7,10 +7,40 @@
 
   <body>
     <h1>Invoices</h1>
-    <button id="login">Login with Google</button>
-    <button id="add">Add invoice</button>
 
-    <!-- Template for Faktura -->
+    <button id="login">Login with Google</button>
+    <button id="show-form">Add invoice</button>
+
+    <!-- LIST VIEW -->
+    <div id="view-list">
+      <h2>Dine fakturaer</h2>
+      <div id="invoice-list"></div>
+    </div>
+
+    <!-- FORM VIEW -->
+    <div id="view-form" style="display: none">
+      <h2>Ny faktura</h2>
+
+      <form id="invoice-form">
+        <input id="customer-name" placeholder="Kundenavn" required />
+        <input id="customer-email" placeholder="E-post" required />
+
+        <div id="items"></div>
+
+        <button type="button" id="add-item">+ Legg til linje</button>
+        <button type="submit">Lagre</button>
+      </form>
+
+      <button id="back">← Tilbake</button>
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="invoice-preview">
+      <!-- Template for Faktura -->
+      <h2>Faktura preview</h2>
+      <div id="invoice-template"></div>
+    </div>
+
     <div
       id="invoice"
       style="
