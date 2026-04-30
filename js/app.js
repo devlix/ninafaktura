@@ -52,7 +52,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // 4. ========= UI handlers (knapper) - ("add invoice" etc)
-document.getElementById("add").onclick = async () => {
+/* document.getElementById("add").onclick = async () => {
   if (!currentUser) {
     alert("Login først");
     return;
@@ -86,7 +86,7 @@ document.getElementById("add").onclick = async () => {
   });
 
   loadInvoices();
-};
+}; */
 
 // 5. ========= funksjoner (loadInvoices etc.)
 
@@ -172,6 +172,22 @@ function renderInvoice(invoice) {
   document.getElementById("vat").innerText = invoice.vatTotal;
   document.getElementById("total").innerText = invoice.total;
 }
+
+function showView(view) {
+  document.getElementById("view-list").style.display = "none";
+  document.getElementById("view-form").style.display = "none";
+
+  document.getElementById(view).style.display = "block";
+}
+
+// Toggle seksjoner
+document.getElementById("show-form").addEventListener("click", () => {
+  showView("view-form");
+});
+
+document.getElementById("back").addEventListener("click", () => {
+  showView("view-list");
+});
 
 // Ggenerer PDF og åpne mail for user
 //    !! NOTE:
