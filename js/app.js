@@ -4,9 +4,11 @@
 //==============
 
 // 1. ========= imports
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+// import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { auth, db, provider } from "./firebase.js";
+
 import {
-  getFirestore,
+  //  getFirestore,
   collection,
   addDoc,
   getDocs,
@@ -20,12 +22,13 @@ import {
 
 // 2. ========= config + init
 import {
-  getAuth,
+  //  getAuth,
   signInWithPopup,
-  GoogleAuthProvider,
+  //  GoogleAuthProvider,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+/* 
 const firebaseConfig = {
   apiKey: "AIzaSyAzxjkVdltn8y2xYV9xMjQye9p2XDJ_VkQ",
   authDomain: "ninafaktura.firebaseapp.com",
@@ -34,11 +37,13 @@ const firebaseConfig = {
   messagingSenderId: "569938023030",
   appId: "1:569938023030:web:242c3d9e1c79d4e8544557",
 };
-
+ */
+/* 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+ */
 
 // 3. ========= auth state / setup
 let currentUser = null;
@@ -341,7 +346,7 @@ function updatePreview(data) {
 
   el.innerHTML = "";
   el.innerHTML = `
-    <h3>${data.customer.name}</h3>
+    <b>${data.customer.name}</b>
     <p>${data.customer.email}</p>
 
     <ul>
