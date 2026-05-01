@@ -236,7 +236,10 @@ function renderInvoice(invoice) {
   document.getElementById("inv-number").innerText = "Nr: " + invoice.id;
 
   document.getElementById("inv-date").innerText =
-    "Dato: " + new Date(invoice.createdAt).toLocaleDateString();
+    "Dato: " +
+    new Date(
+      invoice.createdAt.seconds * 1000 + invoice.createdAt.nanoseconds / 1000
+    ).toLocaleDateString();
 
   // kundeinfo
   document.getElementById("customer").innerHTML = `
