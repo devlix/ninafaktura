@@ -1,3 +1,7 @@
+/* =============  invoices.js  ===================
+ * All logikk mot Firestore:
+ * =============================================== */
+
 import { db } from "./firebase.js";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 

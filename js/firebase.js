@@ -1,3 +1,7 @@
+/* =============  firebase.js  ===================
+ * ONLY setup related stuff
+ * =============================================== */
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 
 // --- AUTHENTICATION

@@ -141,7 +141,7 @@ document
     e.preventDefault();
 
     const user = auth.currentUser;
-    if (!user) return alert("Ikke logget inn");
+    if (!user) return alert("Du må logge inn først ...");
 
     try {
       const data = getFormData(user);
@@ -214,6 +214,7 @@ function getFormData(user) {
   };
 }
 
+// TODO - denne kalless ingen steder foreløpig  !!?
 function renderInvoices(invoices) {
   const container = document.getElementById("invoice-list");
   container.innerHTML = "";
@@ -259,17 +260,18 @@ function renderInvoice(invoice) {
   itemsEl.innerHTML = items
     .map((item) => {
       const sum = item.quantity * item.unitPrice;
-      const vat = sum * item.vatRate;
+      const vat = (sum * item.vatRate) / 100;
+      const totalItem = sum + vat;
 
       return `
       
       <tr style="border-bottom:1px solid #ccc;">
 
-      <td>${item.description}</td>
-      <td>${item.quantity}</td>
-      <td>${item.unitPrice}</td>
-      <td>${vat.toFixed(0)}</td>
-      <td>${sum}</td>
+      <td style="text-align: left">${item.description}</td>
+      <td style="text-align: right">${item.quantity}</td>
+      <td style="text-align: right">${item.unitPrice}</td>
+      <td style="text-align: right">${item.vatRate.toFixed(0)}</td>
+      <td style="text-align: right">${totalItem}</td>
       </tr> `;
     })
     .join("");
