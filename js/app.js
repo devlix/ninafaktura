@@ -1,3 +1,8 @@
+// TODO: FORTSETTER på punkt 2 og 3 i siste chat-melding
+// ==============
+// TODO: Ikke sikker om "removew" knappen skal gjelde for alle rader (addEvent på document - skulle dette heller være en knapp for hver rad, selv om det er litt mer kode som trengs da??)
+//==============
+
 // 1. ========= imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
@@ -144,8 +149,7 @@ document
       }
 
       const id = await saveInvoice(data);
-
-      console.log("Lagret med ID:", id);
+      // console.log("Lagret med ID:", id);
 
       // refresh UI
       updatePreview(data);
@@ -157,7 +161,7 @@ document
     showView("view-list");
     // TODO: sjekk disse ??
     // invoices.unshift({ id, ...data });
-    // renderInvoices(invoices);
+    // renderInvoices(data);
   });
 
 function getFormData(user) {
@@ -203,6 +207,17 @@ function getFormData(user) {
     vatTotal,
     total,
   };
+}
+
+function renderInvoices(invoices) {
+  const container = document.getElementById("invoice-list");
+  container.innerHTML = "";
+
+  invoices.forEach((inv) => {
+    const div = document.createElement("div");
+    div.textContent = inv.customer.name + " - " + inv.total;
+    container.appendChild(div);
+  });
 }
 
 function renderInvoice(invoice) {
@@ -296,6 +311,7 @@ function addItemRow() {
   container.appendChild(div);
 }
 
+// TODO kanskje vi må heller ha en egen "remove" knapp per linje?
 // Remove button for rad salgselement
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("remove")) {
@@ -319,8 +335,11 @@ document.getElementById("show-form").addEventListener("click", () => {
 
 // når invoice lagres - opdater Preview automatisk
 function updatePreview(data) {
-  const el = document.getElementById("invoice-template");
+  const el = document.getElementById("invoice-list");
 
+  // console.log("data", data);
+
+  el.innerHTML = "";
   el.innerHTML = `
     <h3>${data.customer.name}</h3>
     <p>${data.customer.email}</p>
