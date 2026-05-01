@@ -251,6 +251,8 @@ function renderInvoice(invoice) {
   // fallback hvis items mangler
   const items = invoice.items || [];
 
+  itemsEl.innerHTML = "";
+
   itemsEl.innerHTML = items
     .map((item) => {
       const sum = item.quantity * item.unitPrice;
@@ -265,13 +267,9 @@ function renderInvoice(invoice) {
       <td>${item.unitPrice}</td>
       <td>${vat.toFixed(0)}</td>
       <td>${sum}</td>
-    </tr>
-  `;
+      </tr> `;
     })
     .join("");
-
-  // FIXME - debug: se hele objektet
-  // console.log("invoice:", invoice);
 
   // totals
   document.getElementById("subtotal").innerText = invoice.subtotal;
@@ -300,7 +298,7 @@ document.getElementById("add-item").addEventListener("click", addItemRow);
 
 // når form / skjema åpnes, legg til en rad
 function addItemRow() {
-  const container = document.getElementById("items");
+  const container = document.getElementById("form-items");
 
   const div = document.createElement("div");
   div.className = "item-row";
@@ -333,7 +331,7 @@ document.addEventListener("click", (e) => {
 
 // når bruker klikker "add invoice" - legg til en linje
 document.getElementById("show-form").addEventListener("click", () => {
-  document.getElementById("items").innerHTML = "";
+  document.getElementById("form-items").innerHTML = "";
   addItemRow(); // alltid én linje klar
   showView("view-form");
 });
