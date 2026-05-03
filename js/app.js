@@ -30,28 +30,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-/* 
-const firebaseConfig = {
-  apiKey: "AIzaSyAzxjkVdltn8y2xYV9xMjQye9p2XDJ_VkQ",
-  authDomain: "ninafaktura.firebaseapp.com",
-  projectId: "ninafaktura",
-  storageBucket: "ninafaktura.firebasestorage.app",
-  messagingSenderId: "569938023030",
-  appId: "1:569938023030:web:242c3d9e1c79d4e8544557",
-};
-*/
-/* 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
-*/
-
-// 3. ========= auth state / setup
+// --------- GLOBAL Variables
 let currentUser = null;
 let myInvoices = null;
 let selectedInvoice = null; // holder valgt invoice
 
+// 3. ========= auth state / setup / login
 document.getElementById("login").onclick = async () => {
   await signInWithPopup(auth, provider);
 };
@@ -281,8 +265,11 @@ function addItemRow() {
   container.appendChild(div);
 }
 
-// TODO kanskje vi må heller ha en egen "remove" knapp per linje?
-// Remove button for rad salgselement
+// ********* EVENT_HANDLER ***********
+// ***********************************
+
+// ----- Generisk Remove handler for alt mulig egentlig
+//  så lenge buttom og buttontekxt og html struktur er lik !!!
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("remove")) {
     const rows = document.querySelectorAll(".item-row");
@@ -296,14 +283,26 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// når bruker klikker "add invoice" - legg til en linje
+// ----- viewDetail handler for knapper på invoice list
+document.getElementById("invoice-list").addEventListener("click", (e) => {
+  // .closest() leter oppover i HTML-strukturen etter nærmeste element med denne klassen
+  // Dette fungerer selv om brukeren klikker på et ikon inne i knappen!
+  const btn = e.target.closest(".view-btn");
+
+  if (btn) {
+    const id = btn.getAttribute("data-id");
+    viewDetails(id);
+  }
+});
+
+// ----- når bruker klikker "add invoice" - legg til en linje
 document.getElementById("show-form").addEventListener("click", () => {
   document.getElementById("form-items").innerHTML = "";
   addItemRow(); // alltid én linje klar
   showView("view-form");
 });
 
-// når invoice lagres - opdater Preview automatisk
+// ----- når invoice lagres - opdater Preview automatisk
 function updatePreview(data) {
   const el = document.getElementById("invoice-list");
 
@@ -328,6 +327,8 @@ function updatePreview(data) {
   `;
 }
 
+// *********** PDF & MAIL ************
+// ***********************************
 // ========= Ggenerer PDF og åpne mail for user
 //    !! NOTE:
 //    !! Browser kan ikke legge ved filer automatisk i email

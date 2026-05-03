@@ -22,7 +22,7 @@ export function renderInvoices(invoices) {
       <p>Status: <span class="status-${invoice.status}">${
         invoice.status
       }</span></p>
-      <button onclick="viewDetails('${invoice.id}')">Se detaljer</button>
+      <button class="view-btn" data-id="${invoice.id}">Se detaljer</button>
     </div>
   `
     )
@@ -33,9 +33,11 @@ export function renderInvoices(invoices) {
 }
 
 export function viewDetails(invoiceID) {
-  alert("🕵️‍♀️ Not yet implemented");
+  alert(
+    "View Details for Invoice: " + invoiceID + "\n\n 🛠 Not yet implemented 🛠"
+  );
 }
-window.viewDetails = viewDetails;
+// window.viewDetails = viewDetails;
 
 export function renderInvoice(invoice) {
   // stopp hvis ingen invoice
