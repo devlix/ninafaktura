@@ -6,6 +6,8 @@
 // 1. ========= imports
 // import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { auth, db, provider } from "./firebase.js";
+import { renderInvoices, renderInvoice, viewDetails } from "./ui.js";
+import { createInvoice, loadInvoices, getLatestInvoice } from "./invoices.js";
 
 import {
   //  getFirestore,
@@ -37,27 +39,45 @@ const firebaseConfig = {
   messagingSenderId: "569938023030",
   appId: "1:569938023030:web:242c3d9e1c79d4e8544557",
 };
- */
+*/
 /* 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
- */
+*/
 
 // 3. ========= auth state / setup
 let currentUser = null;
+let myInvoices = null;
+let selectedInvoice = null; // holder valgt invoice
 
 document.getElementById("login").onclick = async () => {
   await signInWithPopup(auth, provider);
 };
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUser = user;
-    loadInvoices();
+    // console.log("currentUser.uid: ", currentUser.uid);
+    try {
+      myInvoices = await loadInvoices(currentUser.uid);
+      renderInvoices(myInvoices);
+      selectedInvoice = getLatestInvoice(myInvoices);
+
+      console.log("selectedInvoice", selectedInvoice);
+
+      renderInvoice(selectedInvoice);
+    } catch (error) {
+      console.error("Klarte ikke hente data:", error);
+      // TODO: Vise en feilmelding til brukeren i UI
+    }
   } else {
     currentUser = null;
+    myInvoices = []; // Tømmer listen så ikke neste person ser dine data
+    selectedInvoice = null;
+    renderInvoices([]); // Tømmer listen i UI når brukeren logger ut
+    // oppdaterGrensesnitt(); // TODO: må lages (liste.innerHTML = '')!!
   }
 });
 
@@ -99,9 +119,7 @@ onAuthStateChanged(auth, (user) => {
 }; */
 
 // 5. ========= funksjoner (loadInvoices etc.)
-
-let selectedInvoice = null; // holder valgt invoice
-
+/* 
 async function loadInvoices() {
   if (!currentUser) return;
 
@@ -128,7 +146,7 @@ async function loadInvoices() {
     alert("!! No invoice found !!");
   }
 }
-
+ */
 // lagre til firebase/firestore
 async function saveInvoice(data) {
   const docRef = await addDoc(collection(db, "invoices"), data);
@@ -166,7 +184,7 @@ document
     showView("view-list");
     // TODO: sjekk disse ??
     // invoices.unshift({ id, ...data });
-    // renderInvoices(data);
+    renderInvoices(data); // oppdater html listen
   });
 
 function getFormData(user) {
@@ -214,8 +232,8 @@ function getFormData(user) {
   };
 }
 
-// TODO - denne kalless ingen steder foreløpig  !!?
-function renderInvoices(invoices) {
+// TODO - ny variant flyttet til ui.js  !!
+/* function renderInvoices(invoices) {
   const container = document.getElementById("invoice-list");
   container.innerHTML = "";
 
@@ -224,63 +242,7 @@ function renderInvoices(invoices) {
     div.textContent = inv.customer.name + " - " + inv.total;
     container.appendChild(div);
   });
-}
-
-function renderInvoice(invoice) {
-  // stopp hvis ingen invoice
-  if (!invoice) {
-    console.warn("No invoice to render");
-    alert("!! No invoice found !!");
-    return;
-  }
-  // sett faktura info
-  document.getElementById("inv-number").innerText = "Nr: " + invoice.id;
-
-  document.getElementById("inv-date").innerText =
-    "Dato: " +
-    new Date(
-      invoice.createdAt.seconds * 1000 + invoice.createdAt.nanoseconds / 1000
-    ).toLocaleDateString();
-
-  // kundeinfo
-  document.getElementById("customer").innerHTML = `
-    ${invoice.customer?.name || ""}<br>
-    ${invoice.customer?.address || ""}<br>
-    ${invoice.customer?.email || ""}
-  `;
-
-  // items
-  const itemsEl = document.getElementById("items");
-
-  // fallback hvis items mangler
-  const items = invoice.items || [];
-
-  itemsEl.innerHTML = "";
-
-  itemsEl.innerHTML = items
-    .map((item) => {
-      const sum = item.quantity * item.unitPrice;
-      const vat = (sum * item.vatRate) / 100;
-      const totalItem = sum + vat;
-
-      return `
-      
-      <tr style="border-bottom:1px solid #ccc;">
-
-      <td style="text-align: left">${item.description}</td>
-      <td style="text-align: right">${item.quantity}</td>
-      <td style="text-align: right">${item.unitPrice}</td>
-      <td style="text-align: right">${item.vatRate.toFixed(0)}</td>
-      <td style="text-align: right">${totalItem}</td>
-      </tr> `;
-    })
-    .join("");
-
-  // totals
-  document.getElementById("subtotal").innerText = invoice.subtotal;
-  document.getElementById("vat").innerText = invoice.vatTotal;
-  document.getElementById("total").innerText = invoice.total;
-}
+} */
 
 // enkel view switching
 function showView(view) {

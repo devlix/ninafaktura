@@ -7,9 +7,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 // --- AUTHENTICATION
 import {
   getAuth,
-  signInWithPopup,
+  // signInWithPopup,
   GoogleAuthProvider,
-  onAuthStateChanged,
+  // onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // --- FIRESTORE - DB STUFF
