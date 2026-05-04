@@ -7,7 +7,7 @@
 // import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { auth, db, provider } from "./firebase.js";
 import { renderInvoices, renderInvoice, viewDetails } from "./ui.js";
-import { createInvoice, loadInvoices, getLatestInvoice } from "./invoices.js";
+import { saveInvoice, loadInvoices, getLatestInvoice } from "./invoices.js";
 
 import {
   //  getFirestore,
@@ -130,12 +130,12 @@ async function loadInvoices() {
     alert("!! No invoice found !!");
   }
 }
- */
 // lagre til firebase/firestore
 async function saveInvoice(data) {
   const docRef = await addDoc(collection(db, "invoices"), data);
   return docRef.id;
 }
+*/
 
 document
   .getElementById("invoice-form")
@@ -154,13 +154,13 @@ document
         alert("Kundenavn mangler");
         return;
       }
-
+      console.log("now calling saveInvoice with data: ", data);
       const id = await saveInvoice(data);
-      // console.log("Lagret med ID:", id);
+      console.log("Lagret med ID:", id);
 
       // refresh UI
       updatePreview(data);
-      alert("Faktura lagret!");
+      alert("Faktura lagret! med ID: ", data.id);
     } catch (err) {
       console.error(err);
       alert("Noe gikk galt");
