@@ -7,7 +7,12 @@
 // import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { auth, db, provider } from "./firebase.js";
 import { renderInvoices, renderInvoice, viewDetails } from "./ui.js";
-import { saveInvoice, loadInvoices, getLatestInvoice } from "./invoices.js";
+import {
+  subscribeToInvoices,
+  saveInvoice,
+  loadInvoices,
+  getLatestInvoice,
+} from "./invoices.js";
 
 import {
   //  getFirestore,
@@ -20,9 +25,9 @@ import {
   doc,
   setDoc,
   deleteDoc,
+  // onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 2. ========= config + init
 import {
   //  getAuth,
   signInWithPopup,
@@ -34,6 +39,9 @@ import {
 let currentUser = null;
 let myInvoices = null;
 let selectedInvoice = null; // holder valgt invoice
+let unsubscribe; // will hold function to unsubscribe from firebase listener
+
+// 2. ========= config + init
 
 // 3. ========= auth state / setup / login
 document.getElementById("login").onclick = async () => {
@@ -65,6 +73,10 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
+// console.log("renderInvoices:", renderInvoices);
+// console.log("type:", typeof renderInvoices);
+init(currentUser, myInvoices);
+
 // 4. ========= UI handlers (knapper) - ("add invoice" etc)
 /* document.getElementById("add").onclick = async () => {
   if (!currentUser) {
@@ -79,6 +91,7 @@ onAuthStateChanged(auth, async (user) => {
 
     createdAt: new Date(),
 
+  
     customer: {
       name: "Kunde AS",
       email: "kunde@mail.no",
@@ -154,13 +167,11 @@ document
         alert("Kundenavn mangler");
         return;
       }
-      console.log("now calling saveInvoice with data: ", data);
-      const id = await saveInvoice(data);
-      console.log("Lagret med ID:", id);
+      const currentInvoiceNumber = await saveInvoice(data);
+      alert(`Lagret med Faktura-nr: ${currentInvoiceNumber}`);
 
       // refresh UI
-      updatePreview(data);
-      alert("Faktura lagret! med ID: ", data.id);
+      // updatePreview(data);
     } catch (err) {
       console.error(err);
       alert("Noe gikk galt");
@@ -168,7 +179,7 @@ document
     showView("view-list");
     // TODO: sjekk disse ??
     // invoices.unshift({ id, ...data });
-    renderInvoices(data); // oppdater html listen
+    // renderInvoices(data); // firebase listener handler this !1??
   });
 
 function getFormData(user) {
@@ -255,12 +266,12 @@ function addItemRow() {
   div.className = "item-row";
 
   div.innerHTML = `
-    <input class="desc" placeholder="Beskrivelse" />
-    <input class="qty" type="number" value="1" />
-    <input class="price" type="number" placeholder="Pris" />
-    <input class="vat" type="number" value="25" />
+  <input class="desc" placeholder="Beskrivelse" />
+  <input class="qty" type="number" value="1" />
+  <input class="price" type="number" placeholder="Pris" />
+  <input class="vat" type="number" value="25" />
     <button type="button" class="remove">X</button>
-  `;
+    `;
 
   container.appendChild(div);
 }
@@ -321,12 +332,39 @@ function updatePreview(data) {
       `
         )
         .join("")}
-    </ul>
+        </ul>
 
-    <strong>Total: ${data.total}</strong>
+        <strong>Total: ${data.total}</strong>
   `;
 }
 
+// *********** FB-listener ************
+// ***********************************
+
+function init(user, data) {
+  unsubscribe = subscribeToInvoices(user, renderInvoices);
+  // Firestore will call renderInvoices function with fresh data:, but
+  // If need extra context in renderInvoice,
+  // ** DON´t use renderInvoices(data) ** !! You can wrap it:
+  //  unsubscribe = subscribeToInvoices(user, (invoices) => {
+  //  renderInvoices(invoices, data); // pass extra stuff if needed
+}
+
+window.addEventListener("beforeunload", () => {
+  cleanup();
+});
+
+// call cleannp !!! if the app has navigation or any form of reinit
+//     Call it when:
+//      * user logs out
+//      * user switches account
+//      * you re-init listeners
+function cleanup() {
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
+  }
+}
 // *********** PDF & MAIL ************
 // ***********************************
 // ========= Ggenerer PDF og åpne mail for user

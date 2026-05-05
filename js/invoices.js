@@ -3,10 +3,11 @@
  * =============================================== */
 
 import { db } from "./firebase.js";
-import { renderInvoices } from "./ui.js";
+// import { renderInvoices } from "./ui.js";
 import {
   collection,
   addDoc,
+  limit,
   runTransaction,
   getDocs,
   query,
@@ -15,20 +16,23 @@ import {
   doc,
   setDoc,
   deleteDoc,
+  onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ---- avoid race / collission use transaction to avoid race conditions
 // ---- use counter/invoice document for Faktura-Nr
-export async function createInvoice(data) {
+/* export async function createInvoice(data) {
   return await addDoc(collection(db, "invoices"), data);
 }
 async function saveInvoice_old(data) {
   const docRef = await addDoc(collection(db, "invoices"), data);
   return docRef.id;
 }
+ */
 
+// TODO: name not ideal - rename to createInvoice??
 export async function saveInvoice(invoice) {
-  await runTransaction(db, async (transaction) => {
+  return await runTransaction(db, async (transaction) => {
     // get and set faktura-nr
     const counterRef = doc(db, "counters", "invoice");
     const counterSnap = await transaction.get(counterRef);
@@ -53,11 +57,15 @@ export async function saveInvoice(invoice) {
 
     // write to new invoice
     transaction.set(invoiceRef, {
+      ...invoice, // flatten invoice !!
+      //  ownerId: user.uid, // NEEDE, used in firebase rules!!
       invoiceNumber: padded, // 👈 formatted
+      // TODO: Check if this is sam parameter as "id" in previous versions!?
       invoiceNumberRaw: nextNumber, // 👈 optional (super useful)
-      createdAt: new Date(),
-      status: "draft",
     });
+
+    console.log("invoice number new invoice: ", padded);
+    return padded; // this needs the runTransaction be called with "return"!!
   });
 }
 
@@ -81,4 +89,28 @@ export function getLatestInvoice(allInv) {
   }
   // Sorterer basert på et dato-felt og tar den siste
   return allInv.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds)[0];
+}
+
+// ======= Listners ==========
+// ===========================
+
+// ===== Firebase listener - subsribt to anything
+// returns an unsubscribe fundtion !!
+export function subscribeToInvoices(userId, onChange) {
+  const q = query(
+    collection(db, "invoices"),
+    where("ownerId", "==", userId),
+    orderBy("customer.name", "desc"),
+    //    orderBy("invoiceNumberRaw", "desc"),
+    limit(50)
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const invoices = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    onChange(invoices);
+  });
 }
