@@ -3,7 +3,6 @@
  * =============================================== */
 
 import { db } from "./firebase.js";
-// import { renderInvoices } from "./ui.js";
 import {
   collection,
   addDoc,
@@ -19,17 +18,10 @@ import {
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// import { renderInvoicePreview, renderInvoices } from "./ui.js";
+
 // ---- avoid race / collission use transaction to avoid race conditions
 // ---- use counter/invoice document for Faktura-Nr
-/* export async function createInvoice(data) {
-  return await addDoc(collection(db, "invoices"), data);
-}
-async function saveInvoice_old(data) {
-  const docRef = await addDoc(collection(db, "invoices"), data);
-  return docRef.id;
-}
- */
-
 // TODO: name not ideal - rename to createInvoice??
 export async function saveInvoice(invoice) {
   return await runTransaction(db, async (transaction) => {
@@ -60,7 +52,6 @@ export async function saveInvoice(invoice) {
       ...invoice, // flatten invoice !!
       //  ownerId: user.uid, // NEEDE, used in firebase rules!!
       invoiceNumber: padded, // 👈 formatted
-      // TODO: Check if this is sam parameter as "id" in previous versions!?
       invoiceNumberRaw: nextNumber, // 👈 optional (super useful)
     });
 
@@ -83,7 +74,7 @@ export async function loadInvoices(userId) {
 /* parameer allInv is an array (loadInvoices() returns an array!!9
  */
 export function getLatestInvoice(allInv) {
-  if (allInv.length === 0) {
+  if (!allInv || allInv.length === 0) {
     console.log("no invoices for current user");
     return null;
   }
@@ -100,12 +91,14 @@ export function subscribeToInvoices(userId, onChange) {
   const q = query(
     collection(db, "invoices"),
     where("ownerId", "==", userId),
-    orderBy("customer.name", "desc"),
-    //    orderBy("invoiceNumberRaw", "desc"),
+    orderBy("customer.name", "asc"),
+    orderBy("invoiceNumberRaw", "desc"),
     limit(50)
   );
-
+  console.log("now in subscribeToInvoices --> userId: ", userId);
   return onSnapshot(q, (snapshot) => {
+    alert("now in subscribeToInvoices");
+
     const invoices = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),

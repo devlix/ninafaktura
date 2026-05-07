@@ -6,7 +6,14 @@
 // 1. ========= imports
 // import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { auth, db, provider } from "./firebase.js";
-import { renderInvoices, renderInvoice, viewDetails } from "./ui.js";
+import {
+  renderInvoices,
+  renderInvoicePreview,
+  updateDataAndHtml,
+  viewDetails,
+  clearInvoiceList,
+  clearPreview,
+} from "./ui.js";
 import {
   subscribeToInvoices,
   saveInvoice,
@@ -29,126 +36,92 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 import {
-  //  getAuth,
   signInWithPopup,
-  //  GoogleAuthProvider,
+  signOut,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // --------- GLOBAL Variables
-let currentUser = null;
+export let currentUser = null;
 let myInvoices = null;
 let selectedInvoice = null; // holder valgt invoice
-let unsubscribe; // will hold function to unsubscribe from firebase listener
+let unsubscribeInvoices = null; // will hold function to unsubscribe from firebase listener
 
 // 2. ========= config + init
 
 // 3. ========= auth state / setup / login
 document.getElementById("login").onclick = async () => {
-  await signInWithPopup(auth, provider);
+  await showLoginUI(auth, provider);
+};
+document.getElementById("logout").onclick = () => {
+  logOut(currentUser);
 };
 
 onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUser = user;
-    // console.log("currentUser.uid: ", currentUser.uid);
-    try {
-      myInvoices = await loadInvoices(currentUser.uid);
-      renderInvoices(myInvoices);
-      selectedInvoice = getLatestInvoice(myInvoices);
+  cleanup(); // cleanuo previous sesions
 
-      console.log("selectedInvoice", selectedInvoice);
-
-      renderInvoice(selectedInvoice);
-    } catch (error) {
-      console.error("Klarte ikke hente data:", error);
-      // TODO: Vise en feilmelding til brukeren i UI
-    }
-  } else {
-    currentUser = null;
-    myInvoices = []; // Tømmer listen så ikke neste person ser dine data
-    selectedInvoice = null;
-    renderInvoices([]); // Tømmer listen i UI når brukeren logger ut
-    // oppdaterGrensesnitt(); // TODO: må lages (liste.innerHTML = '')!!
-  }
-});
-
-// console.log("renderInvoices:", renderInvoices);
-// console.log("type:", typeof renderInvoices);
-init(currentUser, myInvoices);
-
-// 4. ========= UI handlers (knapper) - ("add invoice" etc)
-/* document.getElementById("add").onclick = async () => {
-  if (!currentUser) {
-    alert("Login først");
+  /* === Do not use - login must be triggered from user directly
+        i.e by clicking a button, else many browsers will block
+        the popup-login-window - dette fordi den er trigged fra
+        kode og ikke bruker = usikkerhet om bruker vil det ...
+  */
+  if (!user) {
+    //   showLoginUI();
     return;
   }
 
-  await addDoc(collection(db, "invoices"), {
-    id: "INV-002",
-    ownerId: currentUser.uid,
-    status: "draft",
-
-    createdAt: new Date(),
-
-  
-    customer: {
-      name: "Kunde AS",
-      email: "kunde@mail.no",
-      address: "Oslo",
-    },
-
-    items: [
-      {
-        description: "Konsulentarbeid",
-        quantity: 10,
-        unitPrice: 1000,
-        vatRate: 0.25,
-      },
-    ],
-
-    subtotal: 10000,
-    vatTotal: 2500,
-    total: 12500,
-  });
-
-  loadInvoices();
-}; */
-
-// 5. ========= funksjoner (loadInvoices etc.)
-/* 
-async function loadInvoices() {
-  if (!currentUser) return;
-
-  const q = query(
-    collection(db, "invoices"),
-    where("ownerId", "==", currentUser.uid)
-  );
-
-  const snapshot = await getDocs(q);
-
-  // reset først
-  selectedInvoice = null;
-
-  // hent data fra firebase og send til rendering for PDF
-  snapshot.forEach((doc) => {
-    selectedInvoice = doc.data(); // ta første for test
-  });
-
-  // kall KUN hvis vi faktisk har data
-  if (selectedInvoice) {
-    renderInvoice(selectedInvoice);
-  } else {
-    console.warn("No invoices found");
-    alert("!! No invoice found !!");
+  console.log("Auth changed: ", user.displayName);
+  currentUser = user;
+  // console.log("currentUser.uid: ", currentUser.uid);
+  try {
+    startApp(currentUser);
+  } catch (error) {
+    console.error("Klarte ikke hente data:", error);
+    // TODO: Vise en BEDRE feilmelding til brukeren i UI
+    alert("Klarte ikke hente data");
   }
+});
+
+async function startApp(user) {
+  console.log("Starting app for:", user.uid);
+  unsubscribeInvoices = subscribeToInvoices(user.uid, updateDataAndHtml);
+  // Firestore will call renderInvoices function with fresh data:, but
+  // If need extra context in updateDataAndHtml,
+  // ** DON´t use updateDataAndHtml(data) ** !! You can wrap it:
+  //  unsubscribeInvoices = subscribeToInvoices(user, (invoices) => {
+  //  updateDataAndHtml(invoices, data); // pass extra stuff if needed
 }
-// lagre til firebase/firestore
-async function saveInvoice(data) {
-  const docRef = await addDoc(collection(db, "invoices"), data);
-  return docRef.id;
+
+// TODO: bytt mellom signin og signout knapp!!
+async function showLoginUI() {
+  await signInWithPopup(auth, provider).catch((error) => {
+    if (error.code === "auth/popup-blocked") {
+      // Hvis blokkert, prøv redirect i stedet - funker IKKE fra localhost!!
+      // signInWithRedirect(auth, provider);
+      console.error("Auth Popup blocked");
+    } else {
+      console.error("Login failed: ", error);
+    }
+  });
 }
-*/
+
+// TODO: bytt mellom signin og signout knapp!!
+function logOut(user) {
+  if (!auth || !user) {
+    alert("You are not signed in!");
+    return;
+  }
+  cleanup();
+  signOut(auth)
+    .then(() => {
+      alert("You are now signed out!");
+    })
+    .catch((error) => {
+      alert(
+        "Something went wrong 🕵️‍♀️!!\n\n !!! Try to login first then retry logout !!! "
+      );
+    });
+}
 
 document
   .getElementById("invoice-form")
@@ -156,30 +129,27 @@ document
     e.preventDefault();
 
     const user = auth.currentUser;
+
     if (!user) return alert("Du må logge inn først ...");
 
     try {
       const data = getFormData(user);
 
       // TODO: ha mere robust validering!?
-      // minimum validering
       if (!data.customer.name) {
+        // minimum validering
         alert("Kundenavn mangler");
         return;
       }
+
       const currentInvoiceNumber = await saveInvoice(data);
       alert(`Lagret med Faktura-nr: ${currentInvoiceNumber}`);
-
-      // refresh UI
-      // updatePreview(data);
     } catch (err) {
       console.error(err);
       alert("Noe gikk galt");
     }
+
     showView("view-list");
-    // TODO: sjekk disse ??
-    // invoices.unshift({ id, ...data });
-    // renderInvoices(data); // firebase listener handler this !1??
   });
 
 function getFormData(user) {
@@ -313,42 +283,8 @@ document.getElementById("show-form").addEventListener("click", () => {
   showView("view-form");
 });
 
-// ----- når invoice lagres - opdater Preview automatisk
-function updatePreview(data) {
-  const el = document.getElementById("invoice-list");
-
-  // console.log("data", data);
-
-  el.innerHTML = "";
-  el.innerHTML = `
-    <b>${data.customer.name}</b>
-    <p>${data.customer.email}</p>
-
-    <ul>
-      ${data.items
-        .map(
-          (i) => `
-        <li>${i.description} - ${i.quantity} x ${i.unitPrice}</li>
-      `
-        )
-        .join("")}
-        </ul>
-
-        <strong>Total: ${data.total}</strong>
-  `;
-}
-
 // *********** FB-listener ************
 // ***********************************
-
-function init(user, data) {
-  unsubscribe = subscribeToInvoices(user, renderInvoices);
-  // Firestore will call renderInvoices function with fresh data:, but
-  // If need extra context in renderInvoice,
-  // ** DON´t use renderInvoices(data) ** !! You can wrap it:
-  //  unsubscribe = subscribeToInvoices(user, (invoices) => {
-  //  renderInvoices(invoices, data); // pass extra stuff if needed
-}
 
 window.addEventListener("beforeunload", () => {
   cleanup();
@@ -360,11 +296,18 @@ window.addEventListener("beforeunload", () => {
 //      * user switches account
 //      * you re-init listeners
 function cleanup() {
-  if (unsubscribe) {
-    unsubscribe();
-    unsubscribe = null;
+  if (unsubscribeInvoices) {
+    // Cancel all subscriptions
+    unsubscribeInvoices();
+    unsubscribeInvoices = null;
   }
+  currentUser = null;
+  myInvoices = []; // Tømmer listen så ikke neste person ser dine data
+  selectedInvoice = {};
+  clearInvoiceList();
+  clearPreview();
 }
+
 // *********** PDF & MAIL ************
 // ***********************************
 // ========= Ggenerer PDF og åpne mail for user
@@ -374,7 +317,7 @@ function cleanup() {
 document.getElementById("sendEmail").onclick = async () => {
   const { jsPDF } = window.jspdf;
 
-  const el = document.getElementById("invoice");
+  const el = document.getElementById("invoicePreview");
 
   // 1. generer PDF fra HTML
   const canvas = await html2canvas(el, { scale: 2 });
