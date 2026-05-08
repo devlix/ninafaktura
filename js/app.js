@@ -13,6 +13,7 @@ import {
   viewDetails,
   clearInvoiceList,
   clearPreview,
+  updateLoginButtons,
 } from "./ui.js";
 import {
   subscribeToInvoices,
@@ -47,44 +48,47 @@ let myInvoices = null;
 let selectedInvoice = null; // holder valgt invoice
 let unsubscribeInvoices = null; // will hold function to unsubscribe from firebase listener
 
+// 1. ================ LOKALE Hjelpefunksjoner ============
+const getEl = (id) => document.getElementById(id);
+
 // 2. ========= config + init
 
 // 3. ========= auth state / setup / login
-document.getElementById("login").onclick = async () => {
+getEl("login-btn").onclick = async () => {
   await showLoginUI(auth, provider);
 };
-document.getElementById("logout").onclick = () => {
+getEl("logout-btn").onclick = () => {
   logOut(currentUser);
 };
 
 onAuthStateChanged(auth, async (user) => {
   cleanup(); // cleanuo previous sesions
 
-  /* === Do not use - login must be triggered from user directly
-        i.e by clicking a button, else many browsers will block
-        the popup-login-window - dette fordi den er trigged fra
-        kode og ikke bruker = usikkerhet om bruker vil det ...
-  */
   if (!user) {
     //   showLoginUI();
     return;
   }
-
-  console.log("Auth changed: ", user.displayName);
-  currentUser = user;
-  // console.log("currentUser.uid: ", currentUser.uid);
-  try {
-    startApp(currentUser);
-  } catch (error) {
-    console.error("Klarte ikke hente data:", error);
-    // TODO: Vise en BEDRE feilmelding til brukeren i UI
-    alert("Klarte ikke hente data");
+  if (user) {
+    console.log("Auth changed: ", user.displayName);
+    currentUser = user;
+    // console.log("currentUser.uid: ", currentUser.uid);
+    try {
+      startApp(currentUser);
+    } catch (error) {
+      console.error("Klarte ikke hente data:", error);
+      // TODO: Vise en BEDRE feilmelding til brukeren i UI
+    }
+  } else {
+    console.log("Ingen bruker funnet.");
+    showLoginUI(); // Funksjon som kun viser en "Logg inn"-knapp
   }
 });
 
 async function startApp(user) {
-  console.log("Starting app for:", user.uid);
+  console.log("Starting app for:", user.displayName);
   unsubscribeInvoices = subscribeToInvoices(user.uid, updateDataAndHtml);
+  updateLoginButtons(user);
+
   // Firestore will call renderInvoices function with fresh data:, but
   // If need extra context in updateDataAndHtml,
   // ** DON´t use updateDataAndHtml(data) ** !! You can wrap it:
@@ -94,7 +98,7 @@ async function startApp(user) {
 
 // TODO: bytt mellom signin og signout knapp!!
 async function showLoginUI() {
-  await signInWithPopup(auth, provider).catch((error) => {
+  const result = await signInWithPopup(auth, provider).catch((error) => {
     if (error.code === "auth/popup-blocked") {
       // Hvis blokkert, prøv redirect i stedet - funker IKKE fra localhost!!
       // signInWithRedirect(auth, provider);
@@ -103,6 +107,9 @@ async function showLoginUI() {
       console.error("Login failed: ", error);
     }
   });
+  if (result) {
+    updateLoginButtons(currentUser);
+  }
 }
 
 // TODO: bytt mellom signin og signout knapp!!
@@ -114,6 +121,7 @@ function logOut(user) {
   cleanup();
   signOut(auth)
     .then(() => {
+      updateLoginButtons(currentUser);
       alert("You are now signed out!");
     })
     .catch((error) => {
@@ -186,8 +194,8 @@ function getFormData(user) {
     createdAt: new Date(),
 
     customer: {
-      name: document.getElementById("customer-name").value,
-      email: document.getElementById("customer-email").value,
+      name: getEl("customer-name").value,
+      email: getEl("customer-email").value,
     },
 
     items,
@@ -199,7 +207,7 @@ function getFormData(user) {
 
 // TODO - ny variant flyttet til ui.js  !!
 /* function renderInvoices(invoices) {
-  const container = document.getElementById("invoice-list");
+  const container = getEl("invoice-list");
   container.innerHTML = "";
 
   invoices.forEach((inv) => {
@@ -211,26 +219,36 @@ function getFormData(user) {
 
 // enkel view switching
 function showView(view) {
-  document.getElementById("view-list").style.display = "none";
-  document.getElementById("view-form").style.display = "none";
+  getEl("view-list").style.display = "none";
+  getEl("view-form").style.display = "none";
 
-  document.getElementById(view).style.display = "block";
+  getEl(view).style.display = "block";
 }
 
-// knapper for form buttons
-document.getElementById("show-form").addEventListener("click", () => {
+// =========  knapper for form buttons ============
+getEl("show-form-btn").addEventListener("click", () => {
+  getEl("form-items").innerHTML = "";
+  addItemRow(); // alltid én linje klar !!!
   showView("view-form");
 });
 
-document.getElementById("back").addEventListener("click", () => {
+getEl("back").addEventListener("click", () => {
   showView("view-list");
 });
 
-document.getElementById("add-item").addEventListener("click", addItemRow);
+getEl("add-item").addEventListener("click", addItemRow);
 
 // når form / skjema åpnes, legg til en rad
 function addItemRow() {
-  const container = document.getElementById("form-items");
+  if (!currentUser) {
+    alert("Du må logge inn først!");
+    console.warn(
+      "Unexpected event: User not logged in, but addItemRow() called."
+    );
+    return;
+  }
+
+  const container = getEl("form-items");
 
   const div = document.createElement("div");
   div.className = "item-row";
@@ -259,13 +277,15 @@ document.addEventListener("click", (e) => {
     if (rows.length > 1) {
       e.target.parentElement.remove();
     } else {
-      alert("Du må ha minst én linje");
+      alert(
+        "Du må ha minst én linje!/n/n Bruk tilbake knappen hvis du vil avbryte."
+      );
     }
   }
 });
 
 // ----- viewDetail handler for knapper på invoice list
-document.getElementById("invoice-list").addEventListener("click", (e) => {
+getEl("invoice-list").addEventListener("click", (e) => {
   // .closest() leter oppover i HTML-strukturen etter nærmeste element med denne klassen
   // Dette fungerer selv om brukeren klikker på et ikon inne i knappen!
   const btn = e.target.closest(".view-btn");
@@ -274,13 +294,6 @@ document.getElementById("invoice-list").addEventListener("click", (e) => {
     const id = btn.getAttribute("data-id");
     viewDetails(id);
   }
-});
-
-// ----- når bruker klikker "add invoice" - legg til en linje
-document.getElementById("show-form").addEventListener("click", () => {
-  document.getElementById("form-items").innerHTML = "";
-  addItemRow(); // alltid én linje klar
-  showView("view-form");
 });
 
 // *********** FB-listener ************
@@ -306,6 +319,7 @@ function cleanup() {
   selectedInvoice = {};
   clearInvoiceList();
   clearPreview();
+  getEl("invoice-list").innerHTML = "Please login to see your invoices";
 }
 
 // *********** PDF & MAIL ************
@@ -314,10 +328,10 @@ function cleanup() {
 //    !! NOTE:
 //    !! Browser kan ikke legge ved filer automatisk i email
 //    !! Bruker må selv legge ved PDF manuelt
-document.getElementById("sendEmail").onclick = async () => {
+getEl("sendEmail").onclick = async () => {
   const { jsPDF } = window.jspdf;
 
-  const el = document.getElementById("invoicePreview");
+  const el = getEl("invoicePreview");
 
   // 1. generer PDF fra HTML
   const canvas = await html2canvas(el, { scale: 2 });
@@ -350,3 +364,18 @@ Mvh`
   // 4. åpne e-postklient
   window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 };
+
+/* document.addEventListener("DOMContentLoaded", () => {
+  const myBtn = getEl("show-form-btn");
+
+  if (myBtn) {
+    myBtn.addEventListener("click", () => {
+      getEl("form-items").innerHTML = "";
+      addItemRow(); // alltid én linje klar !!!
+      showView("view-form");
+    });
+  } else {
+    console.error("ID-en finnes i HTML, men JS finner den ikke!");
+  }
+});
+ */

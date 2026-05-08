@@ -1,16 +1,38 @@
 /* =============  invoices.js  ===================
- * Alt som rører DOM
+ * Alt som rører DOM / HTML
  * =============================================== */
 
 import { getLatestInvoice } from "./invoices.js";
 import { currentUser } from "./app.js";
 
+// 1. ================ Hjelpefunksjoner ============
+const getEl = (id) => document.getElementById(id);
+
+// 2. Logikk for å bytte mellom Logg inn / Logg ut knapper
+export const updateLoginButtons = (user) => {
+  const loginBtn = getEl("login-btn");
+  const logoutBtn = getEl("logout-btn");
+  const showFormBtn = getEl("show-form-btn");
+
+  if (user) {
+    // Bruker er logget inn
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "block";
+    showFormBtn.style.display = "block";
+  } else {
+    // Bruker er logget ut
+    loginBtn.style.display = "block";
+    logoutBtn.style.display = "none";
+    showFormBtn.style.display = "none";
+  }
+};
+
 export function renderInvoices(invoices) {
-  const container = document.getElementById("invoice-list");
+  const container = getEl("invoice-list");
 
   // 1. Sjekk om det er data å vise
   if (!invoices || invoices.length === 0) {
-    console.log("current user in renderInvoices: ", currentUser);
+    console.log("current user <", currentUser), "> has no invoices";
     if (!currentUser) {
       container.innerHTML = "<p>Du må logge på for å se dine faktura.</p>";
     } else {
@@ -67,17 +89,16 @@ export function renderInvoicePreview(invoice) {
     return;
   }
   // sett faktura info
-  document.getElementById("inv-number").innerText =
-    "Nr: " + invoice.invoiceNumber || "";
+  getEl("inv-number").innerText = "Nr: " + invoice.invoiceNumber || "";
 
-  document.getElementById("inv-date").innerText =
+  getEl("inv-date").innerText =
     "Dato: " +
       new Date(
         invoice.createdAt.seconds * 1000 + invoice.createdAt.nanoseconds / 1000
       ).toLocaleDateString() || "";
 
   // kundeinfo
-  document.getElementById("customer").innerHTML =
+  getEl("customer").innerHTML =
     `
     ${invoice.customer?.name || ""}<br>
     ${invoice.customer?.address || ""}<br>
@@ -85,7 +106,7 @@ export function renderInvoicePreview(invoice) {
   ` || "";
 
   // items
-  const itemsEl = document.getElementById("items");
+  const itemsEl = getEl("items");
 
   // fallback hvis items mangler
   const items = invoice.items || [];
@@ -114,21 +135,21 @@ export function renderInvoicePreview(invoice) {
     .join("");
 
   // totals
-  document.getElementById("subtotal").innerText = invoice.subtotal;
-  document.getElementById("vat").innerText = invoice.vatTotal;
-  document.getElementById("total").innerText = invoice.total;
+  getElText = invoice.subtotal;
+  getEl("vat").innerText = invoice.vatTotal;
+  getEl("total").innerText = invoice.total;
 }
 
 export function clearPreview() {
   //  console.log("Now erasing preview data on html");
   // clear data in preview in canvas
-  document.getElementById("items").innerHTML = "";
-  document.getElementById("subtotal").innerText = "";
-  document.getElementById("vat").innerText = "";
-  document.getElementById("total").innerText = "";
-  document.getElementById("inv-number").innerText = "Nr:";
-  document.getElementById("inv-date").innerText = "Dato: ";
-  document.getElementById("customer").innerHTML = "NoName";
+  getEl("items").innerHTML = "";
+  getEl("subtotal").innerText = "";
+  getEl("vat").innerText = "";
+  getEl("total").innerText = "";
+  getEl("inv-number").innerText = "Nr:";
+  getEl("inv-date").innerText = "Dato: ";
+  getEl("customer").innerHTML = "NoName";
 
   /* TODO: use this if only specific lline(s) shall be removed
   // 1. Select all direct child elements of the 'top' div
@@ -148,5 +169,5 @@ export function clearPreview() {
 }
 
 export function clearInvoiceList() {
-  document.getElementById("invoice-list").innerHTML = "";
+  getEl("invoice-list").innerHTML = "";
 }
