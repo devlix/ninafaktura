@@ -60,6 +60,7 @@ export async function saveInvoice(invoice) {
   });
 }
 
+/* ------ not needed anymore - replaced by onSnapshot listener!!
 export async function loadInvoices(userId) {
   if (!userId) return;
   const q = query(collection(db, "invoices"), where("ownerId", "==", userId));
@@ -70,8 +71,9 @@ export async function loadInvoices(userId) {
   // later if wnated without having to change app.js ui,js, ...
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
+*/
 
-/* parameer allInv is an array (loadInvoices() returns an array!!9
+/* parameer allInv is an array - loadInvoices() / onSnapShot() returns an array!!
  */
 export function getLatestInvoice(allInv) {
   if (!allInv || allInv.length === 0) {
@@ -87,6 +89,11 @@ export function getLatestInvoice(allInv) {
 
 // ===== Firebase listener - subsribt to anything
 // returns an unsubscribe fundtion !!
+/*
+ TODO: Her bør vi ha mulighet for sortering av dato først
+     dette spesielt fi ha "bare" *50000* dokumenter per dag fri og da kan
+     det hende at vi må hente 1000 dok føre vi finner aktuell kunde ...
+ */
 export function subscribeToInvoices(userId, onChange) {
   const q = query(
     collection(db, "invoices"),
@@ -97,11 +104,13 @@ export function subscribeToInvoices(userId, onChange) {
   );
   console.log("now in subscribeToInvoices --> userId: ", userId);
   return onSnapshot(q, (snapshot) => {
-    alert("now in subscribeToInvoices");
+    // alert("Updating data ...");
 
     const invoices = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
+      // Kommer data fra cache eller nett - nice to have NOT essential!?
+      erFraCache: doc.metadata.fromCache,
     }));
 
     onChange(invoices);

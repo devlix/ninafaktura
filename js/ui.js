@@ -1,9 +1,10 @@
-/* =============  invoices.js  ===================
- * Alt som rører DOM / HTML
+/* ==================  ui.js  =======================
+ * Alt som rører DOM / HTML - Tegner knapper, lister
+ *  og feilmeldinger i nettleseren.
  * =============================================== */
 
 import { getLatestInvoice } from "./invoices.js";
-import { currentUser } from "./app.js";
+import { DEBUG, currentUser } from "./app.js";
 
 // 1. ================ Hjelpefunksjoner ============
 const getEl = (id) => document.getElementById(id);
@@ -29,10 +30,11 @@ export const updateLoginButtons = (user) => {
 
 export function renderInvoices(invoices) {
   const container = getEl("invoice-list");
+  container.innerHTML = ""; // Tøm listen før vi legger til nye
 
   // 1. Sjekk om det er data å vise
   if (!invoices || invoices.length === 0) {
-    console.log("current user <", currentUser), "> has no invoices";
+    if (DEBUG) console.log("current user <", currentUser), "> has no invoices";
     if (!currentUser) {
       container.innerHTML = "<p>Du må logge på for å se dine faktura.</p>";
     } else {
@@ -47,12 +49,22 @@ export function renderInvoices(invoices) {
     .map(
       (invoice) => `
     <div class="invoice-card" data-id="${invoice.id}">
-      <h3>KUNDE ${invoice.customer.name || "Mangler Kundenavn"}</h3>
-      <p>Faktura #${invoice.invoiceNumber || "Mangler nummer"}</p>
-      <p>Beløp: ${invoice.total} kr</p>
-      <p>Status: <span class="status-${invoice.status}">${
+      <div class="cell customer" data-label="Kunde">KUNDE ${
+        invoice.customer.name || "Mangler Kundenavn"
+      }</div>
+      <div class="cell faktura-nummer" data-label="Faktura Nr.">Faktura #${
+        invoice.invoiceNumber || "Mangler nummer"
+      }<span>  ${
+        invoice.erFraCache
+          ? '<span class="offline-icon">🕒 </span>'
+          : '<span class="online-icon">🟢</span>'
+      }</span></div>
+      <div class="cell amount" data-label="Beløp">Beløp: ${
+        invoice.total
+      } kr</div>
+      <div class="cell status" data-label="Status"><span class="badge ${
         invoice.status
-      }</span></p>
+      }">${invoice.status}</span></div>
       <button class="view-btn" data-id="${invoice.id}">Se detaljer</button>
     </div>
   `
@@ -75,6 +87,12 @@ export function updateDataAndHtml(invoices) {
     clearInvoiceList();
     clearPreview();
   } else {
+    if (DEBUG) {
+      console.log(
+        `Hentet ${invoices.length} fakturaer. Er de fra cache?`,
+        invoices[0]?.erFraCache
+      );
+    }
     renderInvoices(invoices);
     const invoice = getLatestInvoice(invoices);
     renderInvoicePreview(invoice);
@@ -88,6 +106,7 @@ export function renderInvoicePreview(invoice) {
     console.warn("No invoice to render in preview");
     return;
   }
+
   // sett faktura info
   getEl("inv-number").innerText = "Nr: " + invoice.invoiceNumber || "";
 
@@ -135,7 +154,7 @@ export function renderInvoicePreview(invoice) {
     .join("");
 
   // totals
-  getElText = invoice.subtotal;
+  getEl("subtotal").innerText = invoice.subtotal;
   getEl("vat").innerText = invoice.vatTotal;
   getEl("total").innerText = invoice.total;
 }

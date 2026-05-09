@@ -3,6 +3,11 @@
 // TODO: Ikke sikker om "removew" knappen skal gjelde for alle rader (addEvent på document - skulle dette heller være en knapp for hver rad, selv om det er litt mer kode som trengs da??)
 //==============
 
+/* ====================== app.js =======================
+ * All App-logikk ...
+ *   "Når knappen i ui.js trykkes, kjør login i firebase.js,
+ *   og hvis det går bra, vis resultatet i ui.js igjen."
+ * ===================================================== */
 // 1. ========= imports
 // import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { auth, db, provider } from "./firebase.js";
@@ -18,7 +23,7 @@ import {
 import {
   subscribeToInvoices,
   saveInvoice,
-  loadInvoices,
+  // loadInvoices,
   getLatestInvoice,
 } from "./invoices.js";
 
@@ -44,6 +49,7 @@ import {
 
 // --------- GLOBAL Variables
 export let currentUser = null;
+export const DEBUG = true;
 let myInvoices = null;
 let selectedInvoice = null; // holder valgt invoice
 let unsubscribeInvoices = null; // will hold function to unsubscribe from firebase listener
@@ -78,9 +84,10 @@ onAuthStateChanged(auth, async (user) => {
       console.error("Klarte ikke hente data:", error);
       // TODO: Vise en BEDRE feilmelding til brukeren i UI
     }
-  } else {
-    console.log("Ingen bruker funnet.");
-    showLoginUI(); // Funksjon som kun viser en "Logg inn"-knapp
+    /* } else {
+      console.log("Ingen bruker funnet.");
+      showLoginUI(); // Funksjon som kun viser en "Logg inn"-knapp
+    */
   }
 });
 
@@ -379,3 +386,16 @@ Mvh`
   }
 });
  */
+
+// =======================
+
+// ======================== SERVICE WORKER =========================
+// Legg dette nederst i din app.js (eller index.html)
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/js/sw.js")
+      .then((reg) => console.log("Service Worker registrert!", reg))
+      .catch((err) => console.log("Registrering feilet:", err));
+  });
+}
