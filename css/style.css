@@ -1,0 +1,85 @@
+:root {
+  --primary: #2563eb;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --bg: #f8fafc;
+  --sent: #f0f75f;
+  --draft: #3a3ec5;
+  --cancelled: #858383;
+}
+
+.invoice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Desktop-visning */
+.invoice-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 100px;
+  padding: 15px;
+  font-weight: bold;
+  color: #64748b;
+}
+
+.invoice-card {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 100px;
+  background: rgb(158, 156, 156);
+  padding: 15px;
+  border-radius: 8px;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Mobil-visning (under 768px) */
+@media (max-width: 768px) {
+  .invoice-header {
+    display: none;
+  } /* Skjul overskriftsrad */
+
+  .invoice-card {
+    grid-template-columns: 1fr; /* Ett kort per rad */
+    gap: 8px;
+  }
+
+  .cell {
+    display: flex;
+    justify-content: space-between;
+    text-align: right;
+  }
+
+  .cell::before {
+    content: attr(data-label); /* Henter overskrift fra HTML */
+    font-weight: bold;
+    color: #94a3b8;
+  }
+
+  .customer {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+  }
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+.paid {
+  background: #19833e;
+  color: var(--success);
+}
+.sent {
+  background: #6c3fb6;
+  color: var(--sent);
+}
+.draft {
+  background: hsl(74, 63%, 58%);
+  color: var(--draft);
+}
+.cancelled {
+  background: #666766;
+  color: var(--cancelled);
+}
