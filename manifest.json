@@ -2,5 +2,30 @@
   "name": "Invoice App",
   "short_name": "Invoices",
   "start_url": ".",
-  "display": "standalone"
+  "display": "standalone",
+  "_commentblock": {
+    "whoami": "====== DETTE ER EN KOMMENTAR =======",
+    "SLUTTRESULTAT": "alt under her er slik det skal ses ut til slutt",
+    "short_name": "Faktura",
+    "name": "Nina Faktura System",
+    "icons": [
+      {
+        "src": "/icon-192.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "/icon-512.png",
+        "type": "image/png",
+        "sizes": "512x512",
+        "purpose": "any maskable"
+      }
+    ],
+    "start_url": "/",
+    "background_color": "#f8fafc",
+    "display": "standalone",
+    "scope": "/",
+    "theme_color": "#2563eb",
+    "description": "Håndtering av fakturaer i PWA"
+  }
 }

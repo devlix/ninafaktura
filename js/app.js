@@ -70,10 +70,6 @@ getEl("logout-btn").onclick = () => {
 onAuthStateChanged(auth, async (user) => {
   cleanup(); // cleanuo previous sesions
 
-  if (!user) {
-    //   showLoginUI();
-    return;
-  }
   if (user) {
     console.log("Auth changed: ", user.displayName);
     currentUser = user;
@@ -88,6 +84,12 @@ onAuthStateChanged(auth, async (user) => {
       console.log("Ingen bruker funnet.");
       showLoginUI(); // Funksjon som kun viser en "Logg inn"-knapp
     */
+  } else {
+    // Ingen lagret bruker funnet - her må du være online for å logge inn
+    if (!navigator.onLine) {
+      alert("Du er offline og må koble til nett for å logge inn første gang.");
+    }
+    showLoginUI();
   }
 });
 
@@ -394,7 +396,7 @@ Mvh`
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("/js/sw.js")
+      .register("/sw.js")
       .then((reg) => console.log("Service Worker registrert!", reg))
       .catch((err) => console.log("Registrering feilet:", err));
   });
