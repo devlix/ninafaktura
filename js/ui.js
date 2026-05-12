@@ -98,7 +98,7 @@ export function updateDataAndHtml(invoices) {
 
 // ---- Render invoice preview panel
 export function renderInvoicePreview(invoice) {
-  console.log("in renderInvoicePreview and invoice is: ", invoice);
+  if (DEBUG) console.log("renderInvoicePreview:", invoice);
   if (!invoice) {
     console.warn("No invoice to render in preview");
     return;
@@ -154,7 +154,7 @@ export function clearPreview() {
   getEl("inv-number").innerText = "Nr:";
   getEl("inv-date").innerText = "Dato: ";
   getEl("customer").innerHTML = "NoName";
-  console.log("Cleared all data from Faktura Preview");
+  if (DEBUG) console.log("Faktura Preview tømt");
 }
 
 // ---- Clear invoice list

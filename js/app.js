@@ -24,7 +24,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // --------- state
-let myInvoices = null;
+// TODO: populate selectedInvoice when "Se detaljer" is implemented — PDF export depends on it
 let selectedInvoice = null;
 let unsubscribeInvoices = null;
 
@@ -166,11 +166,9 @@ function cleanup() {
     unsubscribeInvoices = null;
   }
   setCurrentUser(null);
-  myInvoices = [];
-  selectedInvoice = {};
-  clearInvoiceList();
+  selectedInvoice = null;
   clearPreview();
-  getEl("invoice-list").innerHTML = "Please login to see your invoices";
+  getEl("invoice-list").innerHTML = "Logg inn for å se dine fakturaer";
 }
 
 // ========= PDF & email

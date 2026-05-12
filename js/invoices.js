@@ -8,17 +8,12 @@ import {
   addDoc,
   limit,
   runTransaction,
-  getDocs,
   query,
   where,
   orderBy,
   doc,
-  setDoc,
-  deleteDoc,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-// import { renderInvoicePreview, renderInvoices } from "./ui.js";
 
 // ---- avoid race / collission use transaction to avoid race conditions
 // ---- use counter/invoice document for Faktura-Nr
@@ -60,21 +55,6 @@ export async function saveInvoice(invoice) {
   });
 }
 
-/* ------ not needed anymore - replaced by onSnapshot listener!!
-export async function loadInvoices(userId) {
-  if (!userId) return;
-  const q = query(collection(db, "invoices"), where("ownerId", "==", userId));
-
-  const snapshot = await getDocs(q);
-  // transform (map) the firebase object now to make rest of code
-  // independent of firebase format, i.e. easy to use aneother DB
-  // later if wnated without having to change app.js ui,js, ...
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-}
-*/
-
-/* parameer allInv is an array - loadInvoices() / onSnapShot() returns an array!!
- */
 export function getLatestInvoice(allInv) {
   if (!allInv || allInv.length === 0) {
     console.log("no invoices for current user");
