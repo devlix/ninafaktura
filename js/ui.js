@@ -10,7 +10,7 @@ import { currentUser, DEBUG } from "./state.js";
 const getEl = (id) => document.getElementById(id);
 
 // ---- Login / logout button state
-export const updateLoginButtons = (user) => {
+export function updateLoginButtons(user) {
   const loginBtn = getEl("login-btn");
   const logoutBtn = getEl("logout-btn");
   const showFormBtn = getEl("show-form-btn");
@@ -24,17 +24,17 @@ export const updateLoginButtons = (user) => {
     logoutBtn.style.display = "none";
     showFormBtn.style.display = "none";
   }
-};
+}
 
 // ---- Show/hide top-level views
-export const showView = (view) => {
+export function showView(view) {
   getEl("view-list").style.display = "none";
   getEl("view-form").style.display = "none";
   getEl(view).style.display = "block";
-};
+}
 
 // ---- Render invoice list
-export const renderInvoices = (invoices) => {
+export function renderInvoices(invoices) {
   const container = getEl("invoice-list");
   container.innerHTML = "";
 
@@ -69,17 +69,17 @@ export const renderInvoices = (invoices) => {
   `
     )
     .join("");
-};
+}
 
 // ---- Invoice detail stub
-export const viewDetails = (invoiceID) => {
+export function viewDetails(invoiceID) {
   alert(
     "View Details for Invoice: " + invoiceID + "\n\n 🛠 Not yet implemented 🛠"
   );
-};
+}
 
 // ---- Called by Firestore subscription on every snapshot
-export const updateDataAndHtml = (invoices) => {
+export function updateDataAndHtml(invoices) {
   if (!invoices) {
     clearInvoiceList();
     clearPreview();
@@ -94,10 +94,10 @@ export const updateDataAndHtml = (invoices) => {
     const invoice = getLatestInvoice(invoices);
     renderInvoicePreview(invoice);
   }
-};
+}
 
 // ---- Render invoice preview panel
-export const renderInvoicePreview = (invoice) => {
+export function renderInvoicePreview(invoice) {
   console.log("in renderInvoicePreview and invoice is: ", invoice);
   if (!invoice) {
     console.warn("No invoice to render in preview");
@@ -143,10 +143,10 @@ export const renderInvoicePreview = (invoice) => {
   getEl("subtotal").innerText = invoice.subtotal;
   getEl("vat").innerText = invoice.vatTotal;
   getEl("total").innerText = invoice.total;
-};
+}
 
 // ---- Clear preview panel
-export const clearPreview = () => {
+export function clearPreview() {
   getEl("items").innerHTML = "";
   getEl("subtotal").innerText = "";
   getEl("vat").innerText = "";
@@ -155,15 +155,15 @@ export const clearPreview = () => {
   getEl("inv-date").innerText = "Dato: ";
   getEl("customer").innerHTML = "NoName";
   console.log("Cleared all data from Faktura Preview");
-};
+}
 
 // ---- Clear invoice list
-export const clearInvoiceList = () => {
+export function clearInvoiceList() {
   getEl("invoice-list").innerHTML = "";
-};
+}
 
 // ---- Add one item row to the invoice form
-export const addItemRow = (user) => {
+export function addItemRow(user) {
   if (!user) {
     alert("Du må logge inn først!");
     console.warn("Unexpected event: User not logged in, but addItemRow() called.");
@@ -181,10 +181,10 @@ export const addItemRow = (user) => {
     <button type="button" class="remove">X</button>
   `;
   container.appendChild(div);
-};
+}
 
 // ---- Read form values and compute invoice totals
-export const getFormData = (user) => {
+export function getFormData(user) {
   const items = [];
 
   document.querySelectorAll(".item-row").forEach((row) => {
@@ -225,4 +225,4 @@ export const getFormData = (user) => {
     vatTotal,
     total,
   };
-};
+}

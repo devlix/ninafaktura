@@ -59,13 +59,13 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-const startApp = async (user) => {
+async function startApp(user) {
   console.log("Starting app for:", user.displayName);
   unsubscribeInvoices = subscribeToInvoices(user.uid, updateDataAndHtml);
   updateLoginButtons(user);
-};
+}
 
-const showLoginUI = async () => {
+async function showLoginUI() {
   const result = await signInWithPopup(auth, provider).catch((error) => {
     if (error.code === "auth/popup-blocked") {
       console.error("Auth Popup blocked");
@@ -76,9 +76,9 @@ const showLoginUI = async () => {
   if (result) {
     updateLoginButtons(currentUser);
   }
-};
+}
 
-const logOut = (user) => {
+function logOut(user) {
   if (!auth || !user) {
     alert("You are not signed in!");
     return;
@@ -94,7 +94,7 @@ const logOut = (user) => {
         "Something went wrong 🕵️‍♀️!!\n\n !!! Try to login first then retry logout !!! "
       );
     });
-};
+}
 
 // ========= form submit
 document.getElementById("invoice-form").addEventListener("submit", async (e) => {
@@ -160,7 +160,7 @@ window.addEventListener("beforeunload", () => {
   cleanup();
 });
 
-const cleanup = () => {
+function cleanup() {
   if (unsubscribeInvoices) {
     unsubscribeInvoices();
     unsubscribeInvoices = null;
@@ -171,7 +171,7 @@ const cleanup = () => {
   clearInvoiceList();
   clearPreview();
   getEl("invoice-list").innerHTML = "Please login to see your invoices";
-};
+}
 
 // ========= PDF & email
 getEl("sendEmail").onclick = async () => {
