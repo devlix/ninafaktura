@@ -3,7 +3,6 @@
  *  og feilmeldinger i nettleseren.
  * =============================================== */
 
-import { getLatestInvoice } from "./invoices.js";
 import { currentUser, DEBUG } from "./state.js";
 
 // ================ Hjelpefunksjoner ============
@@ -30,6 +29,7 @@ export function updateLoginButtons(user) {
 export function showView(view) {
   getEl("view-list").style.display = "none";
   getEl("view-form").style.display = "none";
+  getEl("view-detail").style.display = "none";
   getEl(view).style.display = "block";
 }
 
@@ -71,11 +71,10 @@ export function renderInvoices(invoices) {
     .join("");
 }
 
-// ---- Invoice detail stub
-export function viewDetails(invoiceID) {
-  alert(
-    "View Details for Invoice: " + invoiceID + "\n\n 🛠 Not yet implemented 🛠"
-  );
+// ---- Show invoice detail view
+export function viewDetails(invoice) {
+  renderInvoicePreview(invoice);
+  showView("view-detail");
 }
 
 // ---- Called by Firestore subscription on every snapshot
@@ -91,8 +90,6 @@ export function updateDataAndHtml(invoices) {
       );
     }
     renderInvoices(invoices);
-    const invoice = getLatestInvoice(invoices);
-    renderInvoicePreview(invoice);
   }
 }
 

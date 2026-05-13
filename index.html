@@ -37,78 +37,74 @@
       <button id="back">← Tilbake</button>
     </div>
 
-    <!-- PREVIEW -->
-    <!-- Template for Faktura -->
-    <h2>Faktura preview</h2>
-    <!-- 
-    <div id="invoice-preview">
-      <h2>Faktura preview</h2>
+    <!-- DETAIL VIEW -->
+    <div id="view-detail" style="display: none">
+      <button id="back-detail">← Tilbake</button>
 
-      <div id="invoice-template"></div>
-    </div>
- -->
-    <div
-      id="invoicePreview"
-      style="
-        width: 800px;
-        padding: 40px;
-        font-family: Arial;
-        background: white;
-        color: #000;
-      "
-    >
-      <!-- HEADER -->
       <div
+        id="invoicePreview"
         style="
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 40px;
+          width: 800px;
+          padding: 40px;
+          font-family: Arial;
+          background: white;
+          color: #000;
         "
       >
-        <div>
-          <h2 style="margin: 0">Ditt Firma AS</h2>
-          <p style="margin: 0">Org.nr: 123456789</p>
-          <p style="margin: 0">email@firma.no</p>
+        <!-- HEADER -->
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+          "
+        >
+          <div>
+            <h2 style="margin: 0">Ditt Firma AS</h2>
+            <p style="margin: 0">Org.nr: 123456789</p>
+            <p style="margin: 0">email@firma.no</p>
+          </div>
+
+          <div style="text-align: right">
+            <h1 style="margin: 0">FAKTURA</h1>
+            <p id="inv-number"></p>
+            <p id="inv-date"></p>
+          </div>
         </div>
 
+        <!-- KUNDE -->
+        <div style="margin-bottom: 30px">
+          <h3>Kunde</h3>
+          <div id="customer"></div>
+        </div>
+
+        <!-- TABELL -->
+        <table
+          style="width: 100%; border-collapse: collapse; margin-bottom: 30px"
+        >
+          <thead>
+            <tr style="border-bottom: 2px solid #000">
+              <th style="text-align: left">Beskrivelse</th>
+              <th>Antall [stk]</th>
+              <th>Pris [kr]</th>
+              <th>MVA [%]</th>
+              <th>Sum [kr]</th>
+            </tr>
+          </thead>
+          <tbody id="items"></tbody>
+        </table>
+
+        <!-- TOTAL -->
         <div style="text-align: right">
-          <h1 style="margin: 0">FAKTURA</h1>
-          <p id="inv-number"></p>
-          <p id="inv-date"></p>
+          <p>Subtotal: <span id="subtotal"></span> kr</p>
+          <p>MVA: <span id="vat"></span> kr</p>
+          <h2>Total: <span id="total"></span> kr</h2>
         </div>
       </div>
 
-      <!-- KUNDE -->
-      <div style="margin-bottom: 30px">
-        <h3>Kunde</h3>
-        <div id="customer"></div>
-      </div>
-
-      <!-- TABELL -->
-      <table
-        style="width: 100%; border-collapse: collapse; margin-bottom: 30px"
-      >
-        <thead>
-          <tr style="border-bottom: 2px solid #000">
-            <th style="text-align: left">Beskrivelse</th>
-            <th>Antall [stk]</th>
-            <th>Pris [kr]</th>
-            <th>MVA [%]</th>
-            <th>Sum [kr]</th>
-          </tr>
-        </thead>
-        <tbody id="items"></tbody>
-      </table>
-
-      <!-- TOTAL -->
-      <div style="text-align: right">
-        <p>Subtotal: <span id="subtotal"></span> kr</p>
-        <p>MVA: <span id="vat"></span> kr</p>
-        <h2>Total: <span id="total"></span> kr</h2>
-      </div>
+      <button id="download-pdf">Last ned PDF</button>
+      <button id="send-email">Send på e-post</button>
     </div>
-
-    <button id="sendEmail">Last ned & send faktura</button>
 
     <!-- TODO Dette må sikres med hashene til de eksplisitte libarries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

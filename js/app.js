@@ -24,7 +24,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // --------- state
-// TODO: populate selectedInvoice when "Se detaljer" is implemented — PDF export depends on it
+let currentInvoices = [];
 let selectedInvoice = null;
 let unsubscribeInvoices = null;
 
@@ -61,7 +61,10 @@ onAuthStateChanged(auth, async (user) => {
 
 async function startApp(user) {
   console.log("Starting app for:", user.displayName);
-  unsubscribeInvoices = subscribeToInvoices(user.uid, updateDataAndHtml);
+  unsubscribeInvoices = subscribeToInvoices(user.uid, (invoices) => {
+    currentInvoices = invoices ?? [];
+    updateDataAndHtml(invoices);
+  });
   updateLoginButtons(user);
 }
 
@@ -151,9 +154,40 @@ getEl("invoice-list").addEventListener("click", (e) => {
   const btn = e.target.closest(".view-btn");
   if (btn) {
     const id = btn.getAttribute("data-id");
-    viewDetails(id);
+    const invoice = currentInvoices.find((inv) => inv.id === id);
+    if (invoice) {
+      selectedInvoice = invoice;
+      viewDetails(invoice);
+    }
   }
 });
+
+// ========= detail view — back / PDF / email
+getEl("back-detail").addEventListener("click", () => showView("view-list"));
+
+getEl("download-pdf").onclick = async () => {
+  if (!selectedInvoice) return;
+  const { jsPDF } = window.jspdf;
+  const el = getEl("invoicePreview");
+
+  const canvas = await html2canvas(el, { scale: 2 });
+  const imgData = canvas.toDataURL("image/png");
+
+  const pdfDoc = new jsPDF("p", "mm", "a4");
+  const imgWidth = 210;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  pdfDoc.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+
+  pdfDoc.save(`faktura-${selectedInvoice.invoiceNumber}.pdf`);
+};
+
+getEl("send-email").onclick = () => {
+  if (!selectedInvoice) return;
+  const email = selectedInvoice.customer?.email || "";
+  const subject = encodeURIComponent("Faktura " + selectedInvoice.invoiceNumber);
+  const body = encodeURIComponent("Hei,\n\nSe vedlagt faktura.\n\nMvh");
+  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+};
 
 // ========= cleanup on unload / logout
 window.addEventListener("beforeunload", () => {
@@ -166,35 +200,11 @@ function cleanup() {
     unsubscribeInvoices = null;
   }
   setCurrentUser(null);
+  currentInvoices = [];
   selectedInvoice = null;
   clearPreview();
   getEl("invoice-list").innerHTML = "Logg inn for å se dine fakturaer";
 }
-
-// ========= PDF & email
-getEl("sendEmail").onclick = async () => {
-  const { jsPDF } = window.jspdf;
-  const el = getEl("invoicePreview");
-
-  const canvas = await html2canvas(el, { scale: 2 });
-  const imgData = canvas.toDataURL("image/png");
-
-  const pdfDoc = new jsPDF("p", "mm", "a4");
-  const imgWidth = 210;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  pdfDoc.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-
-  const fileName = `invoice-${selectedInvoice.id}.pdf`;
-  pdfDoc.save(fileName);
-
-  const email = selectedInvoice.customer?.email || "";
-  const subject = encodeURIComponent("Faktura " + selectedInvoice.id);
-  const body = encodeURIComponent(
-    `Hei,\n\nSe vedlagt faktura (${fileName}).\n\nMvh`
-  );
-
-  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-};
 
 // ========= service worker
 if ("serviceWorker" in navigator) {
