@@ -98,43 +98,99 @@
 
         <!-- invoicePreview keeps inline styles — html2canvas relies on them for PDF -->
         <div id="invoicePreview"
-          style="width:800px;padding:40px;font-family:Arial;background:white;color:#000;">
-          <!-- HEADER -->
-          <div style="display:flex;justify-content:space-between;margin-bottom:40px;">
+          style="width:800px;padding:48px 56px;font-family:Arial,sans-serif;background:white;color:#111;box-sizing:border-box;">
+
+          <!-- HEADER: bedrift venstre, FAKTURA høyre -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
-              <h2 style="margin:0">Ditt Firma AS</h2>
-              <p style="margin:0">Org.nr: 123456789</p>
-              <p style="margin:0">email@firma.no</p>
+              <div style="font-size:26px;font-weight:bold;letter-spacing:1px;">Min Bedrift AS</div>
+              <div style="font-size:12px;color:#666;margin-top:6px;">Org.nr: 123 456 789 MVA</div>
+              <div style="font-size:12px;color:#666;">Gateadresse 1, 0150 Oslo</div>
             </div>
-            <div style="text-align:right">
-              <h1 style="margin:0">FAKTURA</h1>
-              <p id="inv-number"></p>
-              <p id="inv-date"></p>
+            <div style="text-align:right;">
+              <div style="font-size:38px;font-weight:bold;letter-spacing:3px;">FAKTURA</div>
             </div>
           </div>
-          <!-- KUNDE -->
-          <div style="margin-bottom:30px">
-            <h3>Kunde</h3>
-            <div id="customer"></div>
+
+          <div style="border-top:1px solid #ddd;margin:24px 0;"></div>
+
+          <!-- FAKTURA TIL + FAKTURADATA -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div style="font-size:10px;font-weight:bold;letter-spacing:1.5px;color:#999;margin-bottom:10px;">FAKTURA TIL</div>
+              <div id="customer" style="font-size:13px;line-height:1.7;"></div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:10px;font-weight:bold;letter-spacing:1.5px;color:#999;margin-bottom:10px;">FAKTURADATA</div>
+              <table style="font-size:13px;border-collapse:collapse;">
+                <tr>
+                  <td style="color:#666;padding:2px 24px 2px 0;">Fakturanr:</td>
+                  <td style="font-weight:bold;" id="inv-number"></td>
+                </tr>
+                <tr>
+                  <td style="color:#666;padding:2px 24px 2px 0;">Fakturadato:</td>
+                  <td id="inv-date"></td>
+                </tr>
+                <tr>
+                  <td style="color:#666;padding:2px 24px 2px 0;">Forfallsdato:</td>
+                  <td id="inv-duedate"></td>
+                </tr>
+              </table>
+            </div>
           </div>
-          <!-- TABELL -->
-          <table style="width:100%;border-collapse:collapse;margin-bottom:30px">
+
+          <div style="border-top:1px solid #ddd;margin:24px 0;"></div>
+
+          <!-- VARETABELL -->
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
             <thead>
-              <tr style="border-bottom:2px solid #000">
-                <th style="text-align:left">Beskrivelse</th>
-                <th>Antall</th>
-                <th>Pris</th>
-                <th>MVA %</th>
-                <th>Sum</th>
+              <tr style="border-bottom:2px solid #111;">
+                <th style="text-align:left;padding:8px 0;font-size:10px;letter-spacing:1.5px;color:#999;font-weight:bold;">BESKRIVELSE</th>
+                <th style="text-align:right;padding:8px 0;font-size:10px;letter-spacing:1.5px;color:#999;font-weight:bold;">ANTALL</th>
+                <th style="text-align:right;padding:8px 0;font-size:10px;letter-spacing:1.5px;color:#999;font-weight:bold;">PRIS</th>
+                <th style="text-align:right;padding:8px 0;font-size:10px;letter-spacing:1.5px;color:#999;font-weight:bold;">MVA</th>
+                <th style="text-align:right;padding:8px 0;font-size:10px;letter-spacing:1.5px;color:#999;font-weight:bold;">TOTAL</th>
               </tr>
             </thead>
             <tbody id="items"></tbody>
           </table>
-          <!-- TOTAL -->
-          <div style="text-align:right">
-            <p>Subtotal: <span id="subtotal"></span> kr</p>
-            <p>MVA: <span id="vat"></span> kr</p>
-            <h2>Total: <span id="total"></span> kr</h2>
+
+          <div style="border-top:1px solid #ddd;margin:16px 0;"></div>
+
+          <!-- SUBTOTALER -->
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+            <table style="font-size:13px;border-collapse:collapse;min-width:260px;">
+              <tr>
+                <td style="color:#666;padding:3px 32px 3px 0;">Netto:</td>
+                <td style="text-align:right;padding:3px 0;"><span id="subtotal"></span> kr</td>
+              </tr>
+              <tr>
+                <td style="color:#666;padding:3px 32px 3px 0;">MVA:</td>
+                <td style="text-align:right;padding:3px 0;"><span id="vat"></span> kr</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="border-top:1px solid #ddd;margin:8px 0;"></div>
+
+          <!-- TOTALT -->
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;margin-bottom:28px;">
+            <div style="font-size:13px;font-weight:bold;letter-spacing:1px;">TOTALT Å BETALE</div>
+            <div style="font-size:22px;font-weight:bold;">NOK <span id="total"></span></div>
+          </div>
+
+          <!-- BETALINGSINFORMASJON -->
+          <div style="border:1px solid #ddd;border-radius:4px;padding:16px 20px;margin-bottom:36px;">
+            <div style="font-size:10px;font-weight:bold;letter-spacing:1.5px;color:#999;margin-bottom:10px;">BETALINGSINFORMASJON</div>
+            <div style="font-size:13px;line-height:1.8;">
+              <div>Konto: <strong>1234.56.78901</strong></div>
+              <div style="color:#888;font-size:12px;">IBAN: NO12 3456 7890 123 &nbsp;|&nbsp; Swift: DNBANOKK</div>
+            </div>
+          </div>
+
+          <!-- BUNNTEKST -->
+          <div style="border-top:1px solid #eee;padding-top:14px;color:#bbb;font-size:11px;text-align:center;">
+            Min Bedrift AS &nbsp;|&nbsp; Gateadresse 1, 0150 Oslo &nbsp;|&nbsp; tlf: +47 000 00 000 &nbsp;|&nbsp; email@firma.no
           </div>
         </div>
 

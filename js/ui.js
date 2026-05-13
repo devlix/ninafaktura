@@ -7,14 +7,17 @@ import { currentUser, DEBUG } from "./state.js";
 
 // ================ Hjelpefunksjoner ============
 const getEl = (id) => document.getElementById(id);
+const fmtNOK = (n) => Number(n).toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 function statusBadgeClasses(status) {
-  return {
-    draft:     "bg-yellow-100 text-yellow-800",
-    sent:      "bg-purple-100 text-purple-800",
-    paid:      "bg-green-100 text-green-800",
-    cancelled: "bg-gray-200 text-gray-600",
-  }[status] || "bg-gray-100 text-gray-600";
+  return (
+    {
+      draft: "bg-yellow-100 text-yellow-800",
+      sent: "bg-purple-100 text-purple-800",
+      paid: "bg-green-100 text-green-800",
+      cancelled: "bg-gray-200 text-gray-600",
+    }[status] || "bg-gray-100 text-gray-600"
+  );
 }
 
 // ---- Login / logout button state
@@ -55,7 +58,9 @@ export function renderInvoices(invoices) {
     return;
   }
 
-  container.innerHTML = invoices.map((invoice) => `
+  container.innerHTML = invoices
+    .map(
+      (invoice) => `
     <div class="bg-white rounded-xl shadow-sm p-4 flex flex-wrap gap-3 items-center" data-id="${invoice.id}">
       <span class="font-semibold text-gray-800 flex-1 min-w-[140px]">
         ${invoice.customer.name || "Mangler kundenavn"}
@@ -71,38 +76,51 @@ export function renderInvoices(invoices) {
       <button class="view-btn ml-auto bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700"
         data-id="${invoice.id}">Se detaljer</button>
     </div>
-  `).join("");
+  `,
+    )
+    .join("");
 }
 
 // ---- Status transition tables (module-level, shared by renderStatusSection)
 const NEXT_STATUSES = {
-  draft:     ["sent", "cancelled"],
-  sent:      ["paid", "draft", "cancelled"],
-  paid:      ["sent"],
+  draft: ["sent", "cancelled"],
+  sent: ["paid", "draft", "cancelled"],
+  paid: ["sent"],
   cancelled: ["draft"],
 };
-const STATUS_LABELS = { draft: "Utkast", sent: "Sendt", paid: "Betalt", cancelled: "Avbrutt" };
-const ACTION_LABELS = {
-  sent:      "Merk som sendt",
-  paid:      "Merk som betalt",
-  draft:     "Tilbake til utkast",
-  cancelled: "Avbryt faktura",
+const STATUS_LABELS = {
+  draft: "Utkast",
+  sent: "Sendt",
+  paid: "Betalt",
+  cancelled: "Avbrutt",
 };
-const BACKWARD    = new Set(["draft"]);
+const ACTION_LABELS = {
+  sent: "Merk som sendt",
+  paid: "Merk som betalt",
+  draft: "Tilbake til utkast",
+  cancelled: "Kanseller faktura",
+};
+const BACKWARD = new Set(["draft"]);
 const DESTRUCTIVE = new Set(["cancelled"]);
 
 function renderStatusSection(invoice) {
   const nextStates = NEXT_STATUSES[invoice.status] || [];
-  const labelOverrides = invoice.status === "paid" ? { sent: "Angre betaling" } : {};
+  const labelOverrides =
+    invoice.status === "paid" ? { sent: "Angre betaling" } : {};
 
-  const buttons = nextStates.map((s) => {
-    const label = labelOverrides[s] || ACTION_LABELS[s];
-    let cls = "bg-blue-600 text-white hover:bg-blue-700 border-transparent";
-    if (DESTRUCTIVE.has(s)) cls = "border-red-300 text-red-600 hover:bg-red-50";
-    if (BACKWARD.has(s))    cls = "border-gray-300 text-gray-600 hover:bg-gray-50";
-    if (invoice.status === "paid" && s === "sent") cls = "border-gray-300 text-gray-600 hover:bg-gray-50";
-    return `<button class="status-action-btn text-sm px-3 py-1.5 rounded border ${cls}" data-status="${s}">${label}</button>`;
-  }).join("");
+  const buttons = nextStates
+    .map((s) => {
+      const label = labelOverrides[s] || ACTION_LABELS[s];
+      let cls = "bg-blue-600 text-white hover:bg-blue-700 border-transparent";
+      if (DESTRUCTIVE.has(s))
+        cls = "border-red-300 text-red-600 hover:bg-red-50";
+      if (BACKWARD.has(s))
+        cls = "border-gray-300 text-gray-600 hover:bg-gray-50";
+      if (invoice.status === "paid" && s === "sent")
+        cls = "border-gray-300 text-gray-600 hover:bg-gray-50";
+      return `<button class="status-action-btn text-sm px-3 py-1.5 rounded border ${cls}" data-status="${s}">${label}</button>`;
+    })
+    .join("");
 
   getEl("status-section").innerHTML = `
     <span class="px-2 py-0.5 rounded-full text-xs font-medium ${statusBadgeClasses(invoice.status)}">
@@ -115,7 +133,8 @@ function renderStatusSection(invoice) {
 // ---- Show invoice detail view
 export function viewDetails(invoice) {
   renderInvoicePreview(invoice);
-  getEl("edit-invoice").style.display = invoice.status === "draft" ? "inline-block" : "none";
+  getEl("edit-invoice").style.display =
+    invoice.status === "draft" ? "inline-block" : "none";
   renderStatusSection(invoice);
   showView("view-detail");
 }
@@ -129,7 +148,7 @@ export function updateDataAndHtml(invoices) {
     if (DEBUG) {
       console.log(
         `Hentet ${invoices.length} fakturaer. Er de fra cache?`,
-        invoices[0]?.erFraCache
+        invoices[0]?.erFraCache,
       );
     }
     renderInvoices(invoices);
@@ -144,42 +163,47 @@ export function renderInvoicePreview(invoice) {
     return;
   }
 
-  getEl("inv-number").innerText = "Nr: " + invoice.invoiceNumber || "";
+  getEl("inv-number").innerText = invoice.invoiceNumber || "";
 
-  getEl("inv-date").innerText =
-    "Dato: " +
-      new Date(
-        invoice.createdAt.seconds * 1000 + invoice.createdAt.nanoseconds / 1000
-      ).toLocaleDateString() || "";
+  const invoiceDate = new Date(
+    invoice.createdAt.seconds * 1000 + Math.floor(invoice.createdAt.nanoseconds / 1000000),
+  );
+  getEl("inv-date").innerText = invoiceDate.toLocaleDateString("nb-NO");
 
-  getEl("customer").innerHTML = `
-    ${invoice.customer?.name    || ""}<br>
-    ${invoice.customer?.orgnr   ? "Org.nr: " + invoice.customer.orgnr + "<br>" : ""}
-    ${invoice.customer?.address || ""}<br>
-    ${invoice.customer?.city    || ""}<br>
-    ${invoice.customer?.email   || ""}
-  `;
+  const dueDate = new Date(invoiceDate);
+  dueDate.setDate(dueDate.getDate() + 14);
+  getEl("inv-duedate").innerText = dueDate.toLocaleDateString("nb-NO");
+
+  getEl("customer").innerHTML = [
+    invoice.customer?.name    ? `<div style="font-weight:bold;">${invoice.customer.name}</div>` : "",
+    invoice.customer?.orgnr   ? `<div>Org.nr: ${invoice.customer.orgnr}</div>` : "",
+    invoice.customer?.address ? `<div>${invoice.customer.address}</div>` : "",
+    invoice.customer?.city    ? `<div>${invoice.customer.city}</div>` : "",
+    invoice.customer?.email   ? `<div style="color:#666;">${invoice.customer.email}</div>` : "",
+  ].join("");
 
   const itemsEl = getEl("items");
   const items = invoice.items || [];
 
-  itemsEl.innerHTML = items.map((item) => {
-    const sum = item.quantity * item.unitPrice;
-    const vat = (sum * item.vatRate) / 100;
-    const totalItem = sum + vat;
-    return `
-      <tr style="border-bottom:1px solid #ccc;">
-        <td style="text-align:left">${item.description}</td>
-        <td style="text-align:right">${item.quantity}</td>
-        <td style="text-align:right">${item.unitPrice}</td>
-        <td style="text-align:right">${item.vatRate.toFixed(0)}</td>
-        <td style="text-align:right">${totalItem}</td>
+  itemsEl.innerHTML = items
+    .map((item) => {
+      const sum = item.quantity * item.unitPrice;
+      const vat = (sum * item.vatRate) / 100;
+      const totalItem = sum + vat;
+      return `
+      <tr style="border-bottom:1px solid #eee;">
+        <td style="text-align:left;padding:10px 0;">${item.description}</td>
+        <td style="text-align:right;padding:10px 0;">${item.quantity}</td>
+        <td style="text-align:right;padding:10px 0;">${fmtNOK(item.unitPrice)}</td>
+        <td style="text-align:right;padding:10px 0;">${item.vatRate.toFixed(0)} %</td>
+        <td style="text-align:right;padding:10px 0;font-weight:bold;">${fmtNOK(totalItem)}</td>
       </tr>`;
-  }).join("");
+    })
+    .join("");
 
-  getEl("subtotal").innerText = invoice.subtotal;
-  getEl("vat").innerText = invoice.vatTotal;
-  getEl("total").innerText = invoice.total;
+  getEl("subtotal").innerText = fmtNOK(invoice.subtotal);
+  getEl("vat").innerText      = fmtNOK(invoice.vatTotal);
+  getEl("total").innerText    = fmtNOK(invoice.total);
 }
 
 // ---- Clear preview panel
@@ -188,8 +212,9 @@ export function clearPreview() {
   getEl("subtotal").innerText = "";
   getEl("vat").innerText = "";
   getEl("total").innerText = "";
-  getEl("inv-number").innerText = "Nr:";
-  getEl("inv-date").innerText = "Dato: ";
+  getEl("inv-number").innerText = "";
+  getEl("inv-date").innerText = "";
+  getEl("inv-duedate").innerText = "";
   getEl("customer").innerHTML = "";
   if (DEBUG) console.log("Faktura Preview tømt");
 }
@@ -203,7 +228,9 @@ export function clearInvoiceList() {
 export function addItemRow(user, item = null) {
   if (!user) {
     alert("Du må logge inn først!");
-    console.warn("Unexpected event: User not logged in, but addItemRow() called.");
+    console.warn(
+      "Unexpected event: User not logged in, but addItemRow() called.",
+    );
     return;
   }
 
@@ -225,11 +252,11 @@ export function addItemRow(user, item = null) {
 
 // ---- Pre-fill form with existing invoice data (edit mode)
 export function fillForm(invoice, user) {
-  getEl("customer-name").value    = invoice.customer?.name    || "";
-  getEl("customer-orgnr").value   = invoice.customer?.orgnr   || "";
+  getEl("customer-name").value = invoice.customer?.name || "";
+  getEl("customer-orgnr").value = invoice.customer?.orgnr || "";
   getEl("customer-address").value = invoice.customer?.address || "";
-  getEl("customer-city").value    = invoice.customer?.city    || "";
-  getEl("customer-email").value   = invoice.customer?.email   || "";
+  getEl("customer-city").value = invoice.customer?.city || "";
+  getEl("customer-email").value = invoice.customer?.email || "";
   getEl("form-items").innerHTML = "";
   (invoice.items || []).forEach((item) => addItemRow(user, item));
 }
@@ -253,12 +280,12 @@ export function getFormData(user) {
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.quantity * item.unitPrice,
-    0
+    0,
   );
 
   const vatTotal = items.reduce(
     (sum, item) => sum + (item.quantity * item.unitPrice * item.vatRate) / 100,
-    0
+    0,
   );
 
   const total = subtotal + vatTotal;
@@ -268,11 +295,11 @@ export function getFormData(user) {
     status: "draft",
     createdAt: new Date(),
     customer: {
-      name:    getEl("customer-name").value,
-      orgnr:   getEl("customer-orgnr").value,
+      name: getEl("customer-name").value,
+      orgnr: getEl("customer-orgnr").value,
       address: getEl("customer-address").value,
-      city:    getEl("customer-city").value,
-      email:   getEl("customer-email").value,
+      city: getEl("customer-city").value,
+      email: getEl("customer-email").value,
     },
     items,
     subtotal,
