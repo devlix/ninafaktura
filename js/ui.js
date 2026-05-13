@@ -8,6 +8,15 @@ import { currentUser, DEBUG } from "./state.js";
 // ================ Hjelpefunksjoner ============
 const getEl = (id) => document.getElementById(id);
 
+function statusBadgeClasses(status) {
+  return {
+    draft:     "bg-yellow-100 text-yellow-800",
+    sent:      "bg-purple-100 text-purple-800",
+    paid:      "bg-green-100 text-green-800",
+    cancelled: "bg-gray-200 text-gray-600",
+  }[status] || "bg-gray-100 text-gray-600";
+}
+
 // ---- Login / logout button state
 export function updateLoginButtons(user) {
   const loginBtn = getEl("login-btn");
@@ -41,39 +50,34 @@ export function renderInvoices(invoices) {
   if (!invoices || invoices.length === 0) {
     if (DEBUG) console.log("current user <", currentUser, "> has no invoices");
     container.innerHTML = currentUser
-      ? "<p>Ingen fakturaer funnet for din bruker.</p>"
-      : "<p>Du må logge på for å se dine faktura.</p>";
+      ? `<p class="text-gray-500 text-sm">Ingen fakturaer funnet for din bruker.</p>`
+      : `<p class="text-gray-500 text-sm">Du må logge på for å se dine fakturaer.</p>`;
     return;
   }
 
-  container.innerHTML = invoices
-    .map(
-      (invoice) => `
-    <div class="invoice-card" data-id="${invoice.id}">
-      <div class="cell customer" data-label="Kunde">KUNDE ${
-        invoice.customer.name || "Mangler Kundenavn"
-      }</div>
-      <div class="cell faktura-nummer" data-label="Faktura Nr.">Faktura #${
-        invoice.invoiceNumber || "Mangler nummer"
-      }<span>  ${
-        invoice.erFraCache
-          ? '<span class="offline-icon">🕒 </span>'
-          : '<span class="online-icon">🟢</span>'
-      }</span></div>
-      <div class="cell amount" data-label="Beløp">Beløp: ${invoice.total} kr</div>
-      <div class="cell status" data-label="Status"><span class="badge ${
-        invoice.status
-      }">${invoice.status}</span></div>
-      <button class="view-btn" data-id="${invoice.id}">Se detaljer</button>
+  container.innerHTML = invoices.map((invoice) => `
+    <div class="bg-white rounded-xl shadow-sm p-4 flex flex-wrap gap-3 items-center" data-id="${invoice.id}">
+      <span class="font-semibold text-gray-800 flex-1 min-w-[140px]">
+        ${invoice.customer.name || "Mangler kundenavn"}
+      </span>
+      <span class="text-gray-500 text-sm">
+        #${invoice.invoiceNumber || "—"}
+        ${invoice.erFraCache ? "🕒" : "🟢"}
+      </span>
+      <span class="font-medium text-gray-700">${invoice.total} kr</span>
+      <span class="px-2 py-0.5 rounded-full text-xs font-medium ${statusBadgeClasses(invoice.status)}">
+        ${invoice.status}
+      </span>
+      <button class="view-btn ml-auto bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700"
+        data-id="${invoice.id}">Se detaljer</button>
     </div>
-  `
-    )
-    .join("");
+  `).join("");
 }
 
 // ---- Show invoice detail view
 export function viewDetails(invoice) {
   renderInvoicePreview(invoice);
+  getEl("edit-invoice").style.display = invoice.status === "draft" ? "inline-block" : "none";
   showView("view-detail");
 }
 
@@ -109,33 +113,28 @@ export function renderInvoicePreview(invoice) {
         invoice.createdAt.seconds * 1000 + invoice.createdAt.nanoseconds / 1000
       ).toLocaleDateString() || "";
 
-  getEl("customer").innerHTML =
-    `
+  getEl("customer").innerHTML = `
     ${invoice.customer?.name || ""}<br>
     ${invoice.customer?.address || ""}<br>
     ${invoice.customer?.email || ""}
-  ` || "";
+  `;
 
   const itemsEl = getEl("items");
   const items = invoice.items || [];
 
-  itemsEl.innerHTML = items
-    .map((item) => {
-      const sum = item.quantity * item.unitPrice;
-      const vat = (sum * item.vatRate) / 100;
-      const totalItem = sum + vat;
-      const itemLineID =
-        "item-line-random-" + Math.floor(Math.random() * 100 + 1).toString();
-      return `
-      <tr id=${itemLineID} style="border-bottom:1px solid #ccc;">
-        <td style="text-align: left">${item.description}</td>
-        <td style="text-align: right">${item.quantity}</td>
-        <td style="text-align: right">${item.unitPrice}</td>
-        <td style="text-align: right">${item.vatRate.toFixed(0)}</td>
-        <td style="text-align: right">${totalItem}</td>
+  itemsEl.innerHTML = items.map((item) => {
+    const sum = item.quantity * item.unitPrice;
+    const vat = (sum * item.vatRate) / 100;
+    const totalItem = sum + vat;
+    return `
+      <tr style="border-bottom:1px solid #ccc;">
+        <td style="text-align:left">${item.description}</td>
+        <td style="text-align:right">${item.quantity}</td>
+        <td style="text-align:right">${item.unitPrice}</td>
+        <td style="text-align:right">${item.vatRate.toFixed(0)}</td>
+        <td style="text-align:right">${totalItem}</td>
       </tr>`;
-    })
-    .join("");
+  }).join("");
 
   getEl("subtotal").innerText = invoice.subtotal;
   getEl("vat").innerText = invoice.vatTotal;
@@ -150,7 +149,7 @@ export function clearPreview() {
   getEl("total").innerText = "";
   getEl("inv-number").innerText = "Nr:";
   getEl("inv-date").innerText = "Dato: ";
-  getEl("customer").innerHTML = "NoName";
+  getEl("customer").innerHTML = "";
   if (DEBUG) console.log("Faktura Preview tømt");
 }
 
@@ -159,25 +158,36 @@ export function clearInvoiceList() {
   getEl("invoice-list").innerHTML = "";
 }
 
-// ---- Add one item row to the invoice form
-export function addItemRow(user) {
+// ---- Add one item row to the invoice form (item param pre-fills for edit mode)
+export function addItemRow(user, item = null) {
   if (!user) {
     alert("Du må logge inn først!");
     console.warn("Unexpected event: User not logged in, but addItemRow() called.");
     return;
   }
 
-  const container = getEl("form-items");
   const div = document.createElement("div");
-  div.className = "item-row";
+  div.className = "item-row flex gap-2 items-center";
   div.innerHTML = `
-    <input class="desc" placeholder="Beskrivelse" />
-    <input class="qty" type="number" value="1" />
-    <input class="price" type="number" placeholder="Pris" />
-    <input class="vat" type="number" value="25" />
-    <button type="button" class="remove">X</button>
+    <input class="desc flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+      placeholder="Beskrivelse" value="${item?.description || ""}" />
+    <input class="qty w-16 border border-gray-300 rounded px-2 py-1 text-sm text-right"
+      type="number" value="${item?.quantity ?? 1}" />
+    <input class="price w-24 border border-gray-300 rounded px-2 py-1 text-sm text-right"
+      type="number" placeholder="Pris" value="${item?.unitPrice || ""}" />
+    <input class="vat w-16 border border-gray-300 rounded px-2 py-1 text-sm text-right"
+      type="number" value="${item?.vatRate ?? 25}" />
+    <button type="button" class="remove text-red-500 hover:text-red-700 font-bold px-2">✕</button>
   `;
-  container.appendChild(div);
+  getEl("form-items").appendChild(div);
+}
+
+// ---- Pre-fill form with existing invoice data (edit mode)
+export function fillForm(invoice, user) {
+  getEl("customer-name").value = invoice.customer?.name || "";
+  getEl("customer-email").value = invoice.customer?.email || "";
+  getEl("form-items").innerHTML = "";
+  (invoice.items || []).forEach((item) => addItemRow(user, item));
 }
 
 // ---- Read form values and compute invoice totals
