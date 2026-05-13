@@ -56,6 +56,11 @@ export async function saveInvoice(invoice) {
   });
 }
 
+export async function updateInvoiceStatus(id, newStatus) {
+  const invoiceRef = doc(db, "invoices", id);
+  await updateDoc(invoiceRef, { status: newStatus, updatedAt: new Date() });
+}
+
 export async function updateInvoice(id, data) {
   const invoiceRef = doc(db, "invoices", id);
   await updateDoc(invoiceRef, {

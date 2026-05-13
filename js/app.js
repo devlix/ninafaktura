@@ -17,7 +17,7 @@ import {
   fillForm,
   getFormData,
 } from "./ui.js";
-import { subscribeToInvoices, saveInvoice, updateInvoice } from "./invoices.js";
+import { subscribeToInvoices, saveInvoice, updateInvoice, updateInvoiceStatus } from "./invoices.js";
 import {
   signInWithPopup,
   signOut,
@@ -167,6 +167,20 @@ getEl("invoice-list").addEventListener("click", (e) => {
 
 // ========= detail view — back / edit / PDF / email
 getEl("back-detail").addEventListener("click", () => showView("view-list"));
+
+getEl("view-detail").addEventListener("click", async (e) => {
+  const btn = e.target.closest(".status-action-btn");
+  if (!btn || !selectedInvoice) return;
+  const newStatus = btn.getAttribute("data-status");
+  try {
+    await updateInvoiceStatus(selectedInvoice.id, newStatus);
+    selectedInvoice = { ...selectedInvoice, status: newStatus };
+    viewDetails(selectedInvoice);
+  } catch (err) {
+    console.error(err);
+    alert("Kunne ikke oppdatere status");
+  }
+});
 
 getEl("edit-invoice").addEventListener("click", () => {
   editingInvoiceId = selectedInvoice.id;

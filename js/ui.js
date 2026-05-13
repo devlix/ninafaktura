@@ -74,10 +74,49 @@ export function renderInvoices(invoices) {
   `).join("");
 }
 
+// ---- Status transition tables (module-level, shared by renderStatusSection)
+const NEXT_STATUSES = {
+  draft:     ["sent", "cancelled"],
+  sent:      ["paid", "draft", "cancelled"],
+  paid:      ["sent"],
+  cancelled: ["draft"],
+};
+const STATUS_LABELS = { draft: "Utkast", sent: "Sendt", paid: "Betalt", cancelled: "Avbrutt" };
+const ACTION_LABELS = {
+  sent:      "Merk som sendt",
+  paid:      "Merk som betalt",
+  draft:     "Tilbake til utkast",
+  cancelled: "Avbryt faktura",
+};
+const BACKWARD    = new Set(["draft"]);
+const DESTRUCTIVE = new Set(["cancelled"]);
+
+function renderStatusSection(invoice) {
+  const nextStates = NEXT_STATUSES[invoice.status] || [];
+  const labelOverrides = invoice.status === "paid" ? { sent: "Angre betaling" } : {};
+
+  const buttons = nextStates.map((s) => {
+    const label = labelOverrides[s] || ACTION_LABELS[s];
+    let cls = "bg-blue-600 text-white hover:bg-blue-700 border-transparent";
+    if (DESTRUCTIVE.has(s)) cls = "border-red-300 text-red-600 hover:bg-red-50";
+    if (BACKWARD.has(s))    cls = "border-gray-300 text-gray-600 hover:bg-gray-50";
+    if (invoice.status === "paid" && s === "sent") cls = "border-gray-300 text-gray-600 hover:bg-gray-50";
+    return `<button class="status-action-btn text-sm px-3 py-1.5 rounded border ${cls}" data-status="${s}">${label}</button>`;
+  }).join("");
+
+  getEl("status-section").innerHTML = `
+    <span class="px-2 py-0.5 rounded-full text-xs font-medium ${statusBadgeClasses(invoice.status)}">
+      ${STATUS_LABELS[invoice.status] || invoice.status}
+    </span>
+    ${buttons}
+  `;
+}
+
 // ---- Show invoice detail view
 export function viewDetails(invoice) {
   renderInvoicePreview(invoice);
   getEl("edit-invoice").style.display = invoice.status === "draft" ? "inline-block" : "none";
+  renderStatusSection(invoice);
   showView("view-detail");
 }
 
@@ -114,9 +153,11 @@ export function renderInvoicePreview(invoice) {
       ).toLocaleDateString() || "";
 
   getEl("customer").innerHTML = `
-    ${invoice.customer?.name || ""}<br>
+    ${invoice.customer?.name    || ""}<br>
+    ${invoice.customer?.orgnr   ? "Org.nr: " + invoice.customer.orgnr + "<br>" : ""}
     ${invoice.customer?.address || ""}<br>
-    ${invoice.customer?.email || ""}
+    ${invoice.customer?.city    || ""}<br>
+    ${invoice.customer?.email   || ""}
   `;
 
   const itemsEl = getEl("items");
@@ -184,8 +225,11 @@ export function addItemRow(user, item = null) {
 
 // ---- Pre-fill form with existing invoice data (edit mode)
 export function fillForm(invoice, user) {
-  getEl("customer-name").value = invoice.customer?.name || "";
-  getEl("customer-email").value = invoice.customer?.email || "";
+  getEl("customer-name").value    = invoice.customer?.name    || "";
+  getEl("customer-orgnr").value   = invoice.customer?.orgnr   || "";
+  getEl("customer-address").value = invoice.customer?.address || "";
+  getEl("customer-city").value    = invoice.customer?.city    || "";
+  getEl("customer-email").value   = invoice.customer?.email   || "";
   getEl("form-items").innerHTML = "";
   (invoice.items || []).forEach((item) => addItemRow(user, item));
 }
@@ -224,8 +268,11 @@ export function getFormData(user) {
     status: "draft",
     createdAt: new Date(),
     customer: {
-      name: getEl("customer-name").value,
-      email: getEl("customer-email").value,
+      name:    getEl("customer-name").value,
+      orgnr:   getEl("customer-orgnr").value,
+      address: getEl("customer-address").value,
+      city:    getEl("customer-city").value,
+      email:   getEl("customer-email").value,
     },
     items,
     subtotal,
