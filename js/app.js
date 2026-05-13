@@ -14,9 +14,10 @@ import {
   updateLoginButtons,
   showView,
   addItemRow,
+  fillForm,
   getFormData,
 } from "./ui.js";
-import { subscribeToInvoices, saveInvoice } from "./invoices.js";
+import { subscribeToInvoices, saveInvoice, updateInvoice } from "./invoices.js";
 import {
   signInWithPopup,
   signOut,
@@ -27,6 +28,8 @@ import {
 let currentInvoices = [];
 let selectedInvoice = null;
 let unsubscribeInvoices = null;
+let editingInvoiceId = null;
+let formReturnView = "view-list";
 
 // --------- helpers
 const getEl = (id) => document.getElementById(id);
@@ -90,50 +93,50 @@ function logOut(user) {
   signOut(auth)
     .then(() => {
       updateLoginButtons(currentUser);
-      alert("You are now signed out!");
+      alert("Du er nå logget ut!");
     })
     .catch(() => {
-      alert(
-        "Something went wrong 🕵️‍♀️!!\n\n !!! Try to login first then retry logout !!! "
-      );
+      alert("Noe gikk galt ved utlogging. Prøv å logge inn og prøv igjen.");
     });
 }
 
-// ========= form submit
+// ========= form submit — handles both create and edit
 document.getElementById("invoice-form").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const user = auth.currentUser;
   if (!user) return alert("Du må logge inn først ...");
 
+  const data = getFormData(user);
+  if (!data.customer.name) return alert("Kundenavn mangler");
+
   try {
-    const data = getFormData(user);
-
-    if (!data.customer.name) {
-      alert("Kundenavn mangler");
-      return;
+    if (editingInvoiceId) {
+      await updateInvoice(editingInvoiceId, data);
+      editingInvoiceId = null;
+      showView("view-list");
+    } else {
+      const number = await saveInvoice(data);
+      alert(`Lagret med Faktura-nr: ${number}`);
+      showView("view-list");
     }
-
-    const currentInvoiceNumber = await saveInvoice(data);
-    alert(`Lagret med Faktura-nr: ${currentInvoiceNumber}`);
   } catch (err) {
     console.error(err);
     alert("Noe gikk galt");
   }
-
-  showView("view-list");
 });
 
 // ========= form buttons
 getEl("show-form-btn").addEventListener("click", () => {
+  editingInvoiceId = null;
+  formReturnView = "view-list";
+  getEl("form-title").textContent = "Ny faktura";
   getEl("form-items").innerHTML = "";
   addItemRow(currentUser);
   showView("view-form");
 });
 
-getEl("back").addEventListener("click", () => {
-  showView("view-list");
-});
+getEl("back").addEventListener("click", () => showView(formReturnView));
 
 getEl("add-item").addEventListener("click", () => addItemRow(currentUser));
 
@@ -162,8 +165,16 @@ getEl("invoice-list").addEventListener("click", (e) => {
   }
 });
 
-// ========= detail view — back / PDF / email
+// ========= detail view — back / edit / PDF / email
 getEl("back-detail").addEventListener("click", () => showView("view-list"));
+
+getEl("edit-invoice").addEventListener("click", () => {
+  editingInvoiceId = selectedInvoice.id;
+  formReturnView = "view-detail";
+  getEl("form-title").textContent = "Rediger faktura";
+  fillForm(selectedInvoice, currentUser);
+  showView("view-form");
+});
 
 getEl("download-pdf").onclick = async () => {
   if (!selectedInvoice) return;
@@ -202,6 +213,8 @@ function cleanup() {
   setCurrentUser(null);
   currentInvoices = [];
   selectedInvoice = null;
+  editingInvoiceId = null;
+  formReturnView = "view-list";
   clearPreview();
   getEl("invoice-list").innerHTML = "Logg inn for å se dine fakturaer";
 }

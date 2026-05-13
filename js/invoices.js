@@ -12,6 +12,7 @@ import {
   where,
   orderBy,
   doc,
+  updateDoc,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -52,6 +53,18 @@ export async function saveInvoice(invoice) {
 
     console.log("invoice number new invoice: ", padded);
     return padded; // this needs the runTransaction be called with "return"!!
+  });
+}
+
+export async function updateInvoice(id, data) {
+  const invoiceRef = doc(db, "invoices", id);
+  await updateDoc(invoiceRef, {
+    customer:  data.customer,
+    items:     data.items,
+    subtotal:  data.subtotal,
+    vatTotal:  data.vatTotal,
+    total:     data.total,
+    updatedAt: new Date(),
   });
 }
 
