@@ -65,6 +65,18 @@
           <input id="customer-email" placeholder="kunde@eksempel.no" required
             class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" />
         </div>
+        <div class="flex gap-3">
+          <div class="flex flex-col gap-1 flex-1">
+            <label for="deres-ref" class="text-sm font-medium text-gray-700">Deres ref.</label>
+            <input id="deres-ref" placeholder="Kundens referanse"
+              class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" />
+          </div>
+          <div class="flex flex-col gap-1 flex-1">
+            <label for="vaar-ref" class="text-sm font-medium text-gray-700">Vår ref.</label>
+            <input id="vaar-ref" placeholder="Intern referanse"
+              class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" />
+          </div>
+        </div>
 
         <div class="flex gap-2 items-center text-xs text-gray-500 font-medium px-1 mt-2">
           <span class="flex-1">Beskrivelse</span>
@@ -134,6 +146,14 @@
               <tr>
                 <td>Forfallsdato:</td>
                 <td id="inv-duedate"></td>
+              </tr>
+              <tr id="inv-deres-ref-row" style="display:none">
+                <td>Deres ref.:</td>
+                <td id="inv-deres-ref"></td>
+              </tr>
+              <tr id="inv-vaar-ref-row" style="display:none">
+                <td>Vår ref.:</td>
+                <td id="inv-vaar-ref"></td>
               </tr>
             </table>
           </div>

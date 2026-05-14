@@ -206,6 +206,13 @@ export function renderInvoicePreview(invoice) {
     })
     .join("");
 
+  const deresRef = invoice.deresRef || "";
+  const vaarRef = invoice.vaarRef || "";
+  getEl("inv-deres-ref").innerText = deresRef;
+  getEl("inv-vaar-ref").innerText = vaarRef;
+  getEl("inv-deres-ref-row").style.display = deresRef ? "" : "none";
+  getEl("inv-vaar-ref-row").style.display = vaarRef ? "" : "none";
+
   getEl("subtotal").innerText = fmtNOK(invoice.subtotal);
   getEl("vat").innerText = fmtNOK(invoice.vatTotal);
   getEl("total").innerText = fmtNOK(invoice.total);
@@ -220,6 +227,10 @@ export function clearPreview() {
   getEl("inv-number").innerText = "";
   getEl("inv-date").innerText = "";
   getEl("inv-duedate").innerText = "";
+  getEl("inv-deres-ref").innerText = "";
+  getEl("inv-vaar-ref").innerText = "";
+  getEl("inv-deres-ref-row").style.display = "none";
+  getEl("inv-vaar-ref-row").style.display = "none";
   getEl("customer").innerHTML = "";
   if (DEBUG) console.log("Faktura Preview tømt");
 }
@@ -262,6 +273,8 @@ export function fillForm(invoice, user) {
   getEl("customer-address").value = invoice.customer?.address || "";
   getEl("customer-city").value = invoice.customer?.city || "";
   getEl("customer-email").value = invoice.customer?.email || "";
+  getEl("deres-ref").value = invoice.deresRef || "";
+  getEl("vaar-ref").value = invoice.vaarRef || "";
   getEl("form-items").innerHTML = "";
   (invoice.items || []).forEach((item) => addItemRow(user, item));
 }
@@ -306,6 +319,8 @@ export function getFormData(user) {
       city: getEl("customer-city").value,
       email: getEl("customer-email").value,
     },
+    deresRef: getEl("deres-ref").value,
+    vaarRef: getEl("vaar-ref").value,
     items,
     subtotal,
     vatTotal,
