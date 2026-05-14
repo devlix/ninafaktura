@@ -1,0 +1,181 @@
+/* ===================== invoice.css ======================
+ * Styles for #invoicePreview — used in both browser view
+ * and PDF export (html2canvas renders the browser layout,
+ * so linked CSS is applied correctly).
+ * ======================================================= */
+
+#invoicePreview {
+  width: 800px;
+  min-height: 1131px; /* A4 proportions at 800px width: 800 × (297/210) */
+  padding: 48px 56px;
+  font-family: Arial, sans-serif;
+  background: white;
+  color: #111;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Header ---- */
+.inv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.inv-logo-name {
+  font-size: 26px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.inv-logo-sub {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.inv-title {
+  font-size: 38px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  text-align: right;
+}
+
+/* ---- Dividers ---- */
+.inv-divider {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 24px 0;
+}
+
+.inv-divider--xs {
+  margin: 8px 0;
+}
+
+/* ---- Two-column (FAKTURA TIL / FAKTURADATA) ---- */
+.inv-two-col {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.inv-section-label {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+#customer {
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.inv-customer-name  { font-weight: bold; }
+.inv-customer-email { color: #666; }
+
+/* ---- Fakturadata ---- */
+.inv-meta { text-align: right; }
+
+.inv-meta table {
+  font-size: 13px;
+  border-collapse: collapse;
+}
+
+.inv-meta td             { padding: 2px 0; }
+.inv-meta td:first-child { color: #666; padding-right: 24px; text-align: left; }
+.inv-meta td:last-child  { text-align: right; }
+
+#inv-number { font-weight: bold; }
+
+/* ---- Items table ---- */
+.inv-items {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 24px;
+}
+
+.inv-items thead tr { border-bottom: 2px solid #111; }
+
+.inv-items th {
+  padding: 8px 0;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: #999;
+  font-weight: bold;
+}
+
+.inv-items th:first-child       { text-align: left; }
+.inv-items th:not(:first-child) { text-align: right; }
+
+.inv-item-row td {
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.inv-item-row td:first-child       { text-align: left; }
+.inv-item-row td:not(:first-child) { text-align: right; }
+.inv-item-row td:last-child        { font-weight: bold; }
+
+/* ---- Subtotals ---- */
+.inv-subtotals {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.inv-subtotals table {
+  font-size: 13px;
+  border-collapse: collapse;
+  min-width: 260px;
+}
+
+.inv-subtotals td              { padding: 3px 0; }
+.inv-subtotals td:first-child  { color: #666; padding-right: 32px; }
+.inv-subtotals td:last-child   { text-align: right; }
+
+/* ---- Total row ---- */
+.inv-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  margin-bottom: 28px;
+}
+
+.inv-total-label  { font-size: 13px; font-weight: bold; letter-spacing: 1px; }
+.inv-total-amount { font-size: 22px; font-weight: bold; }
+
+/* ---- Payment info box ---- */
+.inv-payment {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 16px 20px;
+  margin-bottom: 28px;
+}
+
+.inv-payment-label {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+.inv-payment-body { font-size: 13px; line-height: 1.8; }
+.inv-payment-sub  { color: #888; font-size: 12px; }
+
+/* ---- Footer ---- */
+.inv-spacer { flex: 1; } /* pushes footer to bottom of A4 area */
+
+.inv-footer {
+  border-top: 1px solid #eee;
+  padding-top: 14px;
+  color: #bbb;
+  font-size: 11px;
+  text-align: center;
+}

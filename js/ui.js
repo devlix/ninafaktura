@@ -180,17 +180,11 @@ export function renderInvoicePreview(invoice) {
   getEl("inv-duedate").innerText = dueDate.toLocaleDateString("nb-NO");
 
   getEl("customer").innerHTML = [
-    invoice.customer?.name
-      ? `<div style="font-weight:bold;">${invoice.customer.name}</div>`
-      : "",
-    invoice.customer?.orgnr
-      ? `<div>Org.nr: ${invoice.customer.orgnr}</div>`
-      : "",
-    invoice.customer?.address ? `<div>${invoice.customer.address}</div>` : "",
-    invoice.customer?.city ? `<div>${invoice.customer.city}</div>` : "",
-    invoice.customer?.email
-      ? `<div style="color:#666;">${invoice.customer.email}</div>`
-      : "",
+    invoice.customer?.name    ? `<div class="inv-customer-name">${invoice.customer.name}</div>`   : "",
+    invoice.customer?.orgnr   ? `<div>Org.nr: ${invoice.customer.orgnr}</div>`                    : "",
+    invoice.customer?.address ? `<div>${invoice.customer.address}</div>`                           : "",
+    invoice.customer?.city    ? `<div>${invoice.customer.city}</div>`                              : "",
+    invoice.customer?.email   ? `<div class="inv-customer-email">${invoice.customer.email}</div>` : "",
   ].join("");
 
   const itemsEl = getEl("items");
@@ -202,12 +196,12 @@ export function renderInvoicePreview(invoice) {
       const vat = (sum * item.vatRate) / 100;
       const totalItem = sum + vat;
       return `
-      <tr style="border-bottom:1px solid #eee;">
-        <td style="text-align:left;padding:5px 0;">${item.description}</td>
-        <td style="text-align:right;padding:5px 0;">${item.quantity}</td>
-        <td style="text-align:right;padding:5px 0;">${fmtNOK(item.unitPrice)}</td>
-        <td style="text-align:right;padding:5px 0;">${item.vatRate.toFixed(0)} %</td>
-        <td style="text-align:right;padding:5px 0;font-weight:bold;">${fmtNOK(totalItem)}</td>
+      <tr class="inv-item-row">
+        <td>${item.description}</td>
+        <td>${item.quantity}</td>
+        <td>${fmtNOK(item.unitPrice)}</td>
+        <td>${item.vatRate.toFixed(0)} %</td>
+        <td>${fmtNOK(totalItem)}</td>
       </tr>`;
     })
     .join("");
