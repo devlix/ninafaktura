@@ -7,7 +7,11 @@ import { currentUser, DEBUG } from "./state.js";
 
 // ================ Hjelpefunksjoner ============
 const getEl = (id) => document.getElementById(id);
-const fmtNOK = (n) => Number(n).toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtNOK = (n) =>
+  Number(n).toLocaleString("nb-NO", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 function statusBadgeClasses(status) {
   return (
@@ -166,7 +170,8 @@ export function renderInvoicePreview(invoice) {
   getEl("inv-number").innerText = invoice.invoiceNumber || "";
 
   const invoiceDate = new Date(
-    invoice.createdAt.seconds * 1000 + Math.floor(invoice.createdAt.nanoseconds / 1000000),
+    invoice.createdAt.seconds * 1000 +
+      Math.floor(invoice.createdAt.nanoseconds / 1000000),
   );
   getEl("inv-date").innerText = invoiceDate.toLocaleDateString("nb-NO");
 
@@ -175,11 +180,17 @@ export function renderInvoicePreview(invoice) {
   getEl("inv-duedate").innerText = dueDate.toLocaleDateString("nb-NO");
 
   getEl("customer").innerHTML = [
-    invoice.customer?.name    ? `<div style="font-weight:bold;">${invoice.customer.name}</div>` : "",
-    invoice.customer?.orgnr   ? `<div>Org.nr: ${invoice.customer.orgnr}</div>` : "",
+    invoice.customer?.name
+      ? `<div style="font-weight:bold;">${invoice.customer.name}</div>`
+      : "",
+    invoice.customer?.orgnr
+      ? `<div>Org.nr: ${invoice.customer.orgnr}</div>`
+      : "",
     invoice.customer?.address ? `<div>${invoice.customer.address}</div>` : "",
-    invoice.customer?.city    ? `<div>${invoice.customer.city}</div>` : "",
-    invoice.customer?.email   ? `<div style="color:#666;">${invoice.customer.email}</div>` : "",
+    invoice.customer?.city ? `<div>${invoice.customer.city}</div>` : "",
+    invoice.customer?.email
+      ? `<div style="color:#666;">${invoice.customer.email}</div>`
+      : "",
   ].join("");
 
   const itemsEl = getEl("items");
@@ -192,18 +203,18 @@ export function renderInvoicePreview(invoice) {
       const totalItem = sum + vat;
       return `
       <tr style="border-bottom:1px solid #eee;">
-        <td style="text-align:left;padding:10px 0;">${item.description}</td>
-        <td style="text-align:right;padding:10px 0;">${item.quantity}</td>
-        <td style="text-align:right;padding:10px 0;">${fmtNOK(item.unitPrice)}</td>
-        <td style="text-align:right;padding:10px 0;">${item.vatRate.toFixed(0)} %</td>
-        <td style="text-align:right;padding:10px 0;font-weight:bold;">${fmtNOK(totalItem)}</td>
+        <td style="text-align:left;padding:5px 0;">${item.description}</td>
+        <td style="text-align:right;padding:5px 0;">${item.quantity}</td>
+        <td style="text-align:right;padding:5px 0;">${fmtNOK(item.unitPrice)}</td>
+        <td style="text-align:right;padding:5px 0;">${item.vatRate.toFixed(0)} %</td>
+        <td style="text-align:right;padding:5px 0;font-weight:bold;">${fmtNOK(totalItem)}</td>
       </tr>`;
     })
     .join("");
 
   getEl("subtotal").innerText = fmtNOK(invoice.subtotal);
-  getEl("vat").innerText      = fmtNOK(invoice.vatTotal);
-  getEl("total").innerText    = fmtNOK(invoice.total);
+  getEl("vat").innerText = fmtNOK(invoice.vatTotal);
+  getEl("total").innerText = fmtNOK(invoice.total);
 }
 
 // ---- Clear preview panel
