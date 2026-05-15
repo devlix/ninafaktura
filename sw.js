@@ -2,11 +2,13 @@ const CACHE_NAME = "faktura-v2";
 const ASSETS = [
   "/", // Selve roten
   "/index.html", // HTML-strukturen
-  "/css/style.css", // All styling
+  "/css/style.css", // All styling fra tailwind
+  "/css/invoice.css", // Spesifikk styling for fakturaen
   "/js/app.js", // Firebase-logikk og UI-kode
   "/js/ui.js",
   "/js/firebase.js",
   "/js/invoices.js",
+  "/js/state.js",
   // eksterne filer
   "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
@@ -26,7 +28,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
-    })
+    }),
   );
 });
 
@@ -85,6 +87,6 @@ self.addEventListener("fetch", (event) => {
           // Her kan du legge inn en fallback hvis både cache og nett feiler
           console.log("Helt offline og fila mangler i cache:", url);
         });
-    })
+    }),
   );
 });
