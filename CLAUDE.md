@@ -4,29 +4,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Running the app
 
-There is no build step. The app uses native ES modules (`type="module"`) so it **must** be served over HTTP — opening `index.html` directly via `file://` will not work.
+The app uses native ES modules (`type="module"`) so it **must** be served over HTTP — opening `index.html` directly via `file://` will not work.
+
+### Tailwind CSS (local CLI — required for offline PWA)
+
+The Tailwind CDN is replaced by a locally compiled stylesheet (`css/style.css`). **You must run the Tailwind watcher whenever you edit HTML classes**, otherwise changes won't appear.
 
 ```bash
-# Any of these work:
-python3 -m http.server 8080
-npx serve .
-npx http-server .
+npm run dev      # watch mode — recompiles css/style.css on every change
+npm run build    # one-shot minified build for production
 ```
 
-Then open `http://localhost:8080` in a browser. There are no tests, no linter, and no package manager.
+Input: `src/input.css` → Output: `css/style.css` (committed, loaded by `index.html`).
+
+### HTTP server (separate terminal)
+
+```bash
+python3 -m http.server 8080   # or: npx serve .
+```
+
+Then open `http://localhost:8080`. Run both terminals simultaneously during development.
 
 ## Architecture
 
-This is a **vanilla JS PWA** (no framework, no bundler) backed by Firebase (Firestore + Google Auth). The four JS modules have strict single responsibilities:
+This is a **vanilla JS PWA** (no framework, no bundler) backed by Firebase (Firestore + Google Auth). The JS modules have strict single responsibilities:
 
 | File | Responsibility |
 |---|---|
 | `js/firebase.js` | Firebase init only — exports `db`, `auth`, `provider` |
-| `js/invoices.js` | Firestore data layer — `saveInvoice`, `subscribeToInvoices`, `getLatestInvoice` |
+| `js/state.js` | Shared mutable state — exports `currentUser`, `setCurrentUser`, `DEBUG` |
+| `js/invoices.js` | Firestore data layer — `saveInvoice`, `subscribeToInvoices`, `updateInvoice`, `updateInvoiceStatus` |
 | `js/ui.js` | DOM/render only — all functions that touch the HTML |
 | `js/app.js` | Orchestrator — wires auth state, form logic, view switching, PDF export |
 
-`app.js` imports from the other three. `ui.js` imports `getLatestInvoice` from `invoices.js` and `DEBUG`/`currentUser` from `app.js` (circular — be careful here).
+`app.js` imports from all others. `ui.js` imports from `state.js` and `invoices.js`. `state.js` was extracted specifically to break the previous circular dependency between `app.js` and `ui.js`.
 
 ## Key data flow
 
@@ -82,7 +93,7 @@ draft ──► sent ──► paid
 
 ## PWA / offline
 
-- Service worker in `sw.js` (cache name `faktura-v2`) caches all static assets and CDN libraries on install
+- Service worker in `sw.js` (cache name `faktura-v2`) caches all static assets on install — includes `css/style.css` (Tailwind output) and `css/invoice.css`
 - Firestore persistence is enabled via `persistentLocalCache` + `persistentMultipleTabManager` — data survives offline and across tabs
 - Firebase API traffic is explicitly bypassed by the service worker (let Firebase SDK handle it)
 - When bumping the SW cache, update `CACHE_NAME` in `sw.js`
