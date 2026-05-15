@@ -65,6 +65,8 @@ export async function updateInvoice(id, data) {
   const invoiceRef = doc(db, "invoices", id);
   await updateDoc(invoiceRef, {
     customer:  data.customer,
+    deresRef:  data.deresRef,
+    vaarRef:   data.vaarRef,
     items:     data.items,
     subtotal:  data.subtotal,
     vatTotal:  data.vatTotal,
