@@ -39,8 +39,46 @@ This is a **vanilla JS PWA** (no framework, no bundler) backed by Firebase (Fire
 
 - Collection `invoices`: one document per invoice, field `ownerId` = `user.uid` (used in security rules)
 - Collection `counters` / document `invoice`: holds `currentNumber` for sequential invoice numbering — updated via Firestore transaction in `saveInvoice`
-- Invoice status lifecycle: `draft` → `sent` → `paid`
 - Query in `subscribeToInvoices` orders by `customer.name` asc then `invoiceNumberRaw` desc, limited to 50
+
+### Invoice document fields
+
+```yaml
+ownerId         string    Firebase Auth uid
+status          string    "draft" | "sent" | "paid" | "cancelled"
+invoiceNumber   string    zero-padded e.g. "000042"
+invoiceNumberRaw number   raw integer (used for sort)
+createdAt       Timestamp Firestore server timestamp
+updatedAt       Timestamp set on every updateInvoice / updateInvoiceStatus call
+deresRef        string    customer's reference (optional)
+vaarRef         string    our internal reference (optional)
+customer        object
+  .name         string    required
+  .orgnr        string    Norwegian org number (optional)
+  .address      string    street address (optional)
+  .city         string    postal code + city (optional)
+  .email        string    required
+items           array
+  [].description string
+  [].quantity    number
+  [].unitPrice   number
+  [].vatRate     number   percentage e.g. 25
+subtotal        number    sum of quantity × unitPrice
+vatTotal        number    sum of vat per line
+total           number    subtotal + vatTotal
+```
+
+### Status lifecycle (bidirectional)
+
+```text
+draft ──► sent ──► paid
+  ▲         │  ▲    │
+  │         ▼  │    ▼
+  └── cancelled ◄───┘   (all backward transitions allowed)
+```
+
+`NEXT_STATUSES` table in `js/ui.js` encodes all valid transitions.
+`updateInvoiceStatus(id, newStatus)` in `js/invoices.js` writes status + updatedAt.
 
 ## PWA / offline
 
