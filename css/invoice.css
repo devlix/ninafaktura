@@ -73,32 +73,50 @@
   line-height: 1.7;
 }
 
-.inv-customer-name  { font-weight: bold; }
-.inv-customer-email { color: #666; }
+.inv-customer-name {
+  font-weight: bold;
+}
+.inv-customer-email {
+  color: #666;
+}
 
 /* ---- Fakturadata ---- */
-.inv-meta { text-align: right; }
+.inv-meta {
+  text-align: right;
+}
 
 .inv-meta table {
   font-size: 13px;
   border-collapse: collapse;
 }
 
-.inv-meta td             { padding: 2px 0; }
-.inv-meta td:first-child { color: #666; padding-right: 24px; text-align: left; }
-.inv-meta td:last-child  { text-align: right; }
+.inv-meta td {
+  padding: 2px 0;
+}
+.inv-meta td:first-child {
+  color: #666;
+  padding-right: 24px;
+  text-align: left;
+}
+.inv-meta td:last-child {
+  text-align: right;
+}
 
-#inv-number { font-weight: bold; }
+#inv-number {
+  font-weight: bold;
+}
 
 /* ---- Items table ---- */
 .inv-items {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  margin-top: 24px;
+  margin-top: 48px;
 }
 
-.inv-items thead tr { border-bottom: 2px solid #111; }
+.inv-items thead tr {
+  border-bottom: 2px solid #111;
+}
 
 .inv-items th {
   padding: 8px 0;
@@ -108,17 +126,27 @@
   font-weight: bold;
 }
 
-.inv-items th:first-child       { text-align: left; }
-.inv-items th:not(:first-child) { text-align: right; }
+.inv-items th:first-child {
+  text-align: left;
+}
+.inv-items th:not(:first-child) {
+  text-align: right;
+}
 
 .inv-item-row td {
   padding: 5px 0;
   border-bottom: 1px solid #eee;
 }
 
-.inv-item-row td:first-child       { text-align: left; }
-.inv-item-row td:not(:first-child) { text-align: right; }
-.inv-item-row td:last-child        { font-weight: bold; }
+.inv-item-row td:first-child {
+  text-align: left;
+}
+.inv-item-row td:not(:first-child) {
+  text-align: right;
+}
+.inv-item-row td:last-child {
+  font-weight: bold;
+}
 
 /* ---- Subtotals ---- */
 .inv-subtotals {
@@ -134,9 +162,16 @@
   min-width: 260px;
 }
 
-.inv-subtotals td              { padding: 3px 0; }
-.inv-subtotals td:first-child  { color: #666; padding-right: 32px; }
-.inv-subtotals td:last-child   { text-align: right; }
+.inv-subtotals td {
+  padding: 3px 0;
+}
+.inv-subtotals td:first-child {
+  color: #666;
+  padding-right: 32px;
+}
+.inv-subtotals td:last-child {
+  text-align: right;
+}
 
 /* ---- Total row ---- */
 .inv-total-row {
@@ -147,8 +182,15 @@
   margin-bottom: 28px;
 }
 
-.inv-total-label  { font-size: 13px; font-weight: bold; letter-spacing: 1px; }
-.inv-total-amount { font-size: 22px; font-weight: bold; }
+.inv-total-label {
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+.inv-total-amount {
+  font-size: 22px;
+  font-weight: bold;
+}
 
 /* ---- Payment info box ---- */
 .inv-payment {
@@ -166,11 +208,19 @@
   margin-bottom: 10px;
 }
 
-.inv-payment-body { font-size: 13px; line-height: 1.8; }
-.inv-payment-sub  { color: #888; font-size: 12px; }
+.inv-payment-body {
+  font-size: 13px;
+  line-height: 1.8;
+}
+.inv-payment-sub {
+  color: #888;
+  font-size: 12px;
+}
 
 /* ---- Footer ---- */
-.inv-spacer { flex: 1; } /* pushes footer to bottom of A4 area */
+.inv-spacer {
+  flex: 1;
+} /* pushes footer to bottom of A4 area */
 
 .inv-footer {
   border-top: 1px solid #eee;

@@ -1,0 +1,16 @@
+{
+  "name": "faktura-pwa",
+  "version": "1.0.0",
+  "description": "Fakturerings-PWA med Vanilla JS og Tailwind",
+  "main": "index.html",
+  "scripts": {
+    "dev": "tailwindcss -i ./src/input.css -o ./css/style.css --watch",
+    "build": "tailwindcss -i ./src/input.css -o ./css/style.css --minify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}
