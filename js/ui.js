@@ -26,18 +26,28 @@ function statusBadgeClasses(status) {
 
 // ---- Login / logout button state
 export function updateLoginButtons(user) {
-  const loginBtn = getEl("login-btn");
-  const logoutBtn = getEl("logout-btn");
+  const loginBtn    = getEl("login-btn");
   const showFormBtn = getEl("show-form-btn");
+  const avatarBtn   = getEl("user-avatar-btn");
+  const userMenu    = getEl("user-menu");
 
   if (user) {
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "block";
+    loginBtn.style.display    = "none";
     showFormBtn.style.display = "block";
+    const initial = (user.displayName || user.email || "?")[0].toUpperCase();
+    getEl("user-initial").textContent      = initial;
+    getEl("user-menu-name").textContent    = user.displayName || user.email || "";
+    avatarBtn.title = user.displayName || user.email || "";
+    avatarBtn.classList.remove("bg-gray-300");
+    avatarBtn.classList.add("bg-blue-600");
   } else {
-    loginBtn.style.display = "block";
-    logoutBtn.style.display = "none";
+    loginBtn.style.display    = "block";
     showFormBtn.style.display = "none";
+    getEl("user-initial").textContent = "?";
+    avatarBtn.title = "";
+    avatarBtn.classList.remove("bg-blue-600");
+    avatarBtn.classList.add("bg-gray-300");
+    userMenu.style.display = "none";
   }
 }
 

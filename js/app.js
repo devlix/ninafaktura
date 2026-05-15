@@ -43,6 +43,21 @@ getEl("logout-btn").onclick = () => {
   logOut(currentUser);
 };
 
+getEl("user-avatar-btn").addEventListener("click", () => {
+  if (!currentUser) {
+    showLoginUI();
+  } else {
+    const menu = getEl("user-menu");
+    menu.style.display = menu.style.display === "none" ? "block" : "none";
+  }
+});
+
+document.addEventListener("click", (e) => {
+  if (!getEl("user-avatar-btn").contains(e.target)) {
+    getEl("user-menu").style.display = "none";
+  }
+});
+
 onAuthStateChanged(auth, async (user) => {
   cleanup();
 
